@@ -1,6 +1,7 @@
-from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from spacy.tokens import Span
+from spacy.tokens.doc import Doc
 
 
 def default_sort_key(span: Span) -> Tuple[int, int]:
@@ -206,3 +207,70 @@ def get_spans(spans: List[Span], label: Union[int, str]) -> List[Span]:
         return [span for span in spans if span.label == label]
     else:
         return [span for span in spans if span.label_ == label]
+
+
+def align_spans(
+    source: Sequence[Span],
+    target: Sequence[Span],
+) -> List[Set[Span]]:
+    """
+    Aligns two lists of spans, by matching source spans that overlap target spans.
+    This function is optimized to avoid quadratic complexity.
+
+    Parameters
+    ----------
+    source : List[Span]
+        List of spans to align.
+    target : List[Span]
+        List of spans to align.
+
+    Returns
+    -------
+    List[Set[Span]]
+        Subset of `source` spans for each target span
+    """
+    source = sorted(source, key=lambda x: (x.start, x.end))
+    target = sorted(target, key=lambda x: (x.start, x.end))
+
+    aligned = [set() for _ in target]
+    print("ALIGNED", source, target)
+    source_idx = 0
+    for target_idx in range(len(target)):
+        while source[source_idx].end <= target[target_idx].start:
+            source_idx += 1
+        i = source_idx
+        while i < len(source) and source[i].start <= target[target_idx].end:
+            aligned[target_idx].add(source[i])
+            i += 1
+
+    return aligned
+
+
+def get_span_group(doclike: Union[Doc, Span], group: str) -> List[Span]:
+    """
+    Get the spans of a span group that are contained inside a doclike object.
+
+    Parameters
+    ----------
+    doclike : Union[Doc, Span]
+        Doclike object to act as a mask.
+    group : str
+        Group name from which to get the spans.
+
+    Returns
+    -------
+    List[Span]
+        List of spans.
+    """
+    if isinstance(doclike, Doc):
+        return [
+            span
+            for span in doclike.spans.get(group, ())
+            if span.start >= doclike.start and span.end <= doclike.end
+        ]
+    else:
+        return [
+            span
+            for span in doclike.doc.spans.get(group, ())
+            if span.start >= doclike.start and span.end <= doclike.end
+        ]
