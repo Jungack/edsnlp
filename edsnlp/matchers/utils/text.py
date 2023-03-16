@@ -11,6 +11,7 @@ def get_text(
     doclike: Union[Doc, Span],
     attr: str,
     ignore_excluded: bool,
+    ignore_space_tokens: bool = False,
 ) -> str:
     """
     Get text using a custom attribute, possibly ignoring excluded tokens.
@@ -23,6 +24,8 @@ def get_text(
         Attribute to use.
     ignore_excluded : bool
         Whether to skip excluded tokens, by default False
+    ignore_space_tokens : bool
+        Whether to skip space tokens, by default False
 
     Returns
     -------
@@ -40,7 +43,10 @@ def get_text(
         else:
             tokens = doclike
     else:
-        tokens = [t for t in doclike if t.tag_ != "EXCLUDED"]
+        if not ignore_space_tokens:
+            tokens = [t for t in doclike if t.tag_ != "EXCLUDED"]
+        else:
+            tokens = [t for t in doclike if t.tag_ not in ("EXCLUDED", "SPACE")]
 
     if not tokens:
         return ""

@@ -57,6 +57,7 @@ class SimstringMatcher:
         threshold: float = 0.75,
         windows: int = 5,
         ignore_excluded: bool = False,
+        ignore_space_tokens: bool = False,
         attr: str = "NORM",
     ):
         """
@@ -76,7 +77,9 @@ class SimstringMatcher:
             Maximum number of words in a candidate span
         threshold: float
             Minimum similarity value to match a concept's synonym
-        ignore_excluded : bool, optional
+        ignore_excluded : Optional[bool]
+            Whether to exclude tokens that have an EXCLUDED tag, by default False
+        ignore_space_tokens : Optional[bool]
             Whether to exclude tokens that have a "SPACE" tag, by default False
         attr : str
             Default attribute to match on, by default "TEXT".
@@ -96,6 +99,7 @@ class SimstringMatcher:
         self.measure = measure
         self.threshold = threshold
         self.ignore_excluded = ignore_excluded
+        self.ignore_space_tokens = ignore_space_tokens
         self.attr = attr
 
         if path is None:
@@ -138,7 +142,10 @@ class SimstringMatcher:
                 for cui, synset in tqdm(terms.items()) if progress else terms.items():
                     for term in nlp.pipe(synset):
                         norm_text = get_text(
-                            term, self.attr, ignore_excluded=self.ignore_excluded
+                            term,
+                            self.attr,
+                            ignore_excluded=self.ignore_excluded,
+                            ignore_space_tokens=self.ignore_space_tokens,
                         )
                         term = "##" + norm_text + "##"
                         ss_db.insert(term)

@@ -4,6 +4,13 @@
 
 ### Added
 - New trainable component for multi-label, multi-class span qualification (any attribute/extension)
+- Add range measurements (like `la tumeur fait entre 1 et 2 cm`) to `eds.measurements` matcher
+- Add `eds.spaces` (or `eds.normalizer` with `spaces=True`) to detect space tokens, and add `ignore_space_tokens`
+to `EDSPhraseMatcher` and `SimstringMatcher` to skip them
+
+### Fixed
+
+- Abbreviation and number tokenization issues in the `eds` tokenizer
 
 ## v0.8.0 (2023-03-09)
 
