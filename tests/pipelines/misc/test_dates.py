@@ -6,7 +6,7 @@ import spacy
 from pytest import fixture
 from spacy.language import Language
 
-from edsnlp.pipelines.misc.dates.models import AbsoluteDate, Direction, Mode
+from edsnlp.pipelines.misc.dates.models import AbsoluteDate, Direction, Mode, Relative
 from edsnlp.utils.examples import parse_example
 
 TZ = pytz.timezone("Europe/Paris")
@@ -84,10 +84,12 @@ def test_dates_component(blank_nlp: Language):
 
         doc = blank_nlp(text)
 
-        assert len(doc.spans["dates"]) == len(entities)
+        assert len((*doc.spans["dates"], *doc.spans["durations"])) == len(entities)
         assert len(doc.ents) == len(entities)
 
-        for span, entity in zip(doc.spans["dates"], entities):
+        for span, entity in zip(
+            (*doc.spans["dates"], *doc.spans["durations"]), entities
+        ):
             assert span.text == text[entity.start_char : entity.end_char]
 
             date = span._.date
@@ -183,8 +185,11 @@ def test_dates_component(blank_nlp: Language):
                         note_datetime=note_datetime, infer_from_context=True
                     ) == TZ.localize(datetime(**d))
 
+            elif isinstance(date, Relative):
+                assert date.to_datetime() is None
             else:
-                assert date.to_datetime() is not None
+                assert date.to_duration()
+                assert date.to_datetime(note_datetime=note_datetime)
 
 
 def test_periods(blank_nlp: Language):
@@ -224,9 +229,11 @@ def test_time(with_time: bool):
 
         doc = nlp(text)
 
-        assert len(doc.spans["dates"]) == len(entities)
+        assert len((*doc.spans["dates"], *doc.spans["durations"])) == len(entities)
 
-        for span, entity in zip(doc.spans["dates"], entities):
+        for span, entity in zip(
+            (*doc.spans["dates"], *doc.spans["durations"]), entities
+        ):
             assert span.text == text[entity.start_char : entity.end_char]
             norm = next(m.value for m in entity.modifiers if m.key == "norm")
             assert span._.date.norm() == norm
@@ -254,7 +261,7 @@ def test_false_positives(blank_nlp: Language):
     for example in counter_examples:
         doc = blank_nlp(example)
 
-        assert len(doc.spans["dates"]) == 0
+        assert len((*doc.spans["dates"], *doc.spans["durations"])) == 0
 
 
 def test_dates_on_ents_only():
@@ -277,9 +284,9 @@ def test_dates_on_ents_only():
 
     assert len(doc.ents) == 1
 
-    assert len(doc.spans["dates"]) == len(entities)
+    assert len((*doc.spans["dates"], *doc.spans["durations"])) == len(entities)
 
-    for span, entity in zip(doc.spans["dates"], entities):
+    for span, entity in zip((*doc.spans["dates"], *doc.spans["durations"]), entities):
         assert span.text == text[entity.start_char : entity.end_char]
 
 
@@ -290,5 +297,11 @@ def test_illegal_dates(blank_nlp):
     )
     for text in texts:
         doc = blank_nlp(text)
-        ent = doc.spans["dates"][0]
+        ent = (*doc.spans["dates"], *doc.spans["durations"])[0]
         assert ent._.date.to_datetime() is None
+
+
+def test_date_label():
+    nlp = spacy.blank("eds")
+    nlp.add_pipe("eds.dates", config={"use_date_label": True, "as_ents": True})
+    assert nlp("Le 31/06/17, la dernière dose.").ents[0].label_ == "date"
