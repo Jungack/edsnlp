@@ -233,7 +233,6 @@ def align_spans(
     target = sorted(target, key=lambda x: (x.start, x.end))
 
     aligned = [set() for _ in target]
-    print("ALIGNED", source, target)
     source_idx = 0
     for target_idx in range(len(target)):
         while source[source_idx].end <= target[target_idx].start:
@@ -263,11 +262,7 @@ def get_span_group(doclike: Union[Doc, Span], group: str) -> List[Span]:
         List of spans.
     """
     if isinstance(doclike, Doc):
-        return [
-            span
-            for span in doclike.spans.get(group, ())
-            if span.start >= doclike.start and span.end <= doclike.end
-        ]
+        return list(doclike.spans.get(group, ()))
     else:
         return [
             span
