@@ -1,1 +1,1 @@
-from .factory import remove_lowercase
+from .factory import create_component as remove_lowercase

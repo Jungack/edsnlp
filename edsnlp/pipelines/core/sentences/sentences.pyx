@@ -12,7 +12,7 @@ from spacy.vocab cimport Vocab
 from .terms import punctuation
 
 
-cdef class SentenceSegmenter(object):
+cdef class FastSentenceSegmenter(object):
     """
     Segments the Doc into sentences using a rule-based strategy,
     specific to AP-HP documents.
@@ -106,3 +106,16 @@ cdef class SentenceSegmenter(object):
                 seen_period = True
             elif is_newline:
                 seen_newline = True
+
+class SentenceSegmenter:
+    def __init__(
+        self,
+        vocab: Vocab,
+        punct_chars: Optional[List[str]],
+        use_endlines: bool,
+        ignore_excluded: bool = True,
+    ):
+        self.fast_segmenter = FastSentenceSegmenter(vocab, punct_chars, use_endlines, ignore_excluded)
+
+    def __call__(self, doc: Doc):
+        return self.fast_segmenter(doc)

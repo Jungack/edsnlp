@@ -3,7 +3,7 @@ from typing import List
 from spacy.language import Language
 from spacy.tokens import Doc
 
-from edsnlp.pipelines.base import BaseComponent
+from ...base import BaseComponent
 
 
 class ContextAdder(BaseComponent):

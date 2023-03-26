@@ -5,7 +5,7 @@ from .core.endlines.factory import create_component as endlines
 from .core.matcher.factory import create_component as matcher
 from .core.normalizer.accents.factory import create_component as accents
 from .core.normalizer.factory import create_component as normalizer
-from .core.normalizer.lowercase.factory import remove_lowercase
+from .core.normalizer.lowercase.factory import create_component as lowercase
 from .core.normalizer.pollution.factory import create_component as pollution
 from .core.normalizer.quotes.factory import create_component as quotes
 from .core.sentences.factory import create_component as sentences
@@ -31,5 +31,5 @@ from .qualifiers.family.factory import create_component as family
 from .qualifiers.history.factory import create_component as history
 from .qualifiers.hypothesis.factory import create_component as hypothesis
 from .qualifiers.negation.factory import create_component as negation
-from .qualifiers.reported_speech.factory import create_component as rspeech
+from .qualifiers.reported_speech.factory import create_component as reported_speech
 from .trainable.nested_ner import create_component as nested_ner

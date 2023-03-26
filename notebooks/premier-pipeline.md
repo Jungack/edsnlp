@@ -72,7 +72,7 @@ nlp.add_pipe('dates')
 nlp.add_pipe('negation')
 nlp.add_pipe('hypothesis')
 nlp.add_pipe('family')
-nlp.add_pipe('rspeech')
+nlp.add_pipe('reported_speech')
 ```
 
 ## Application du pipeline

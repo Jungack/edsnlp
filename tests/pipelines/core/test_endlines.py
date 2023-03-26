@@ -50,7 +50,7 @@ def test_endlines(blank_nlp, model_path):
     blank_nlp = spacy.blank("eds")
 
     # Use an existing trained model
-    blank_nlp.add_pipe("endlines", config=dict(model_path=model_path))
+    blank_nlp.add_pipe("eds.endlines", config=dict(model_path=model_path))
     docs = list(blank_nlp.pipe(texts))
 
     assert [i for i, t in enumerate(docs[1]) if t.tag_ == "EXCLUDED"] == [3, 8]
@@ -60,8 +60,8 @@ def test_normalizer_endlines(blank_nlp, model_path):
     blank_nlp = spacy.blank("eds")
 
     # Use an existing trained model
-    blank_nlp.add_pipe("normalizer")
-    blank_nlp.add_pipe("endlines", config=dict(model_path=model_path))
+    blank_nlp.add_pipe("eds.normalizer")
+    blank_nlp.add_pipe("eds.endlines", config=dict(model_path=model_path))
     docs = list(blank_nlp.pipe(texts))
 
     assert [i for i, t in enumerate(docs[1]) if t.tag_ == "EXCLUDED"] == [3, 8]
