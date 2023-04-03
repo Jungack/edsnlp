@@ -278,9 +278,11 @@ class FactoryRegistry(Registry):
             return curry_and_register
 
 
-@set_default_registry
-class registry(spacy.util.registry):
+class registry:
     factory = factories = FactoryRegistry(("spacy", "factories"), entry_points=True)
     misc = Registry(("spacy", "misc"), entry_points=True)
     languages = Registry(("spacy", "languages"), entry_points=True)
     tokenizers = Registry(("spacy", "tokenizers"), entry_points=True)
+
+
+set_default_registry(registry)

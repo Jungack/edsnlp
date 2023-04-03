@@ -1,12 +1,12 @@
-from typing import Any, Callable, Dict, Iterable, Optional
-
-import spacy
-from spacy import util
-from spacy.errors import Errors
-from spacy.language import FactoryMeta
+from spacy import registry, util, Errors, Vocab
+from spacy.language import FactoryMeta, Language, DEFAULT_CONFIG
 from spacy.pipe_analysis import validate_attrs
-from spacy.pipeline import Pipe
-from spacy.util import SimpleFrozenDict, SimpleFrozenList, registry
+from spacy.tokens import Doc
+from spacy.util import SimpleFrozenDict, SimpleFrozenList, raise_error
+from spacy.vocab import create_vocab
+from typing import Callable, Dict, Iterable, Optional, Any, List, Tuple, Set, Union
+
+from edsnlp.core.registry import accepted_arguments
 
 
 @classmethod
@@ -70,8 +70,8 @@ def factory(
                 )
                 raise ValueError(err)
 
-        arg_names = util.get_arg_names(factory_func)
-        if "nlp" not in arg_names or "name" not in arg_names:
+        util.get_arg_names(factory_func)
+        if len(accepted_arguments(factory_func, ["nlp", "name"])) < 2:
             raise ValueError(Errors.E964.format(name=name))
         # Officially register the factory so we can later call
         # registry.resolve and refer to it in the config as
@@ -102,77 +102,73 @@ def factory(
     return add_factory
 
 
-@classmethod
-def component(
-    cls,
-    name: str,
+def __init__(
+    self,
+    vocab: Union[Vocab, bool] = True,
     *,
-    assigns: Iterable[str] = SimpleFrozenList(),
-    requires: Iterable[str] = SimpleFrozenList(),
-    retokenizes: bool = False,
-    func: Optional["Pipe"] = None,
-) -> Callable[..., Any]:
+    max_length: int = 10**6,
+    meta: Dict[str, Any] = {},
+    create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
+    batch_size: int = 1000,
+    **kwargs,
+) -> None:
     """
-    Patched from spaCy to allow back dots in factory
-    names (https://github.com/aphp/edsnlp/pull/152)
+    EDS-NLP: Patched from spaCy do enable lazy-loading components
 
-    Register a new pipeline component. Can be used for stateless function
-    components that don't require a separate factory. Can be used as a
-    decorator on a function or classmethod, or called as a function with the
-    factory provided as the func keyword argument. To create a component and
-    add it to the pipeline, you can use nlp.add_pipe(name).
+    Initialise a Language object.
 
-    name (str): The name of the component factory.
-    assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-        e.g. "token.ent_id". Used for pipeline analysis.
-    requires (Iterable[str]): Doc/Token attributes required by this component,
-        e.g. "token.ent_id". Used for pipeline analysis.
-    retokenizes (bool): Whether the component changes the tokenization.
-        Used for pipeline analysis.
-    func (Optional[Callable]): Factory function if not used as a decorator.
+    vocab (Vocab): A `Vocab` object. If `True`, a vocab is created.
+    meta (dict): Custom meta data for the Language class. Is written to by
+        models to add model meta data.
+    max_length (int): Maximum number of characters in a single text. The
+        current models may run out memory on extremely long texts, due to
+        large internal allocations. You should segment these texts into
+        meaningful units, e.g. paragraphs, subsections etc, before passing
+        them to spaCy. Default maximum length is 1,000,000 charas (1mb). As
+        a rule of thumb, if all pipeline components are enabled, spaCy's
+        default models currently requires roughly 1GB of temporary memory per
+        100,000 characters in one text.
+    create_tokenizer (Callable): Function that takes the nlp object and
+        returns a tokenizer.
+    batch_size (int): Default batch size for pipe and evaluate.
 
-    DOCS: https://spacy.io/api/language#component
+    DOCS: https://spacy.io/api/language#init
     """
-    if name is not None:
-        if not isinstance(name, str):
-            raise ValueError(Errors.E963.format(decorator="component"))
-    component_name = name if name is not None else util.get_object_name(func)
 
-    def add_component(component_func: "Pipe") -> Callable:
-        if isinstance(func, type):  # function is a class
-            raise ValueError(Errors.E965.format(name=component_name))
+    # EDS-NLP: disable spacy default call to load every factory
+    # since some of them may be missing dependencies (like torch)
+    # util.registry._entry_point_factories.get_all()
 
-        def factory_func(nlp, name: str) -> "Pipe":
-            return component_func
+    self._config = DEFAULT_CONFIG.merge(self.default_config)
+    self._meta = dict(meta)
+    self._path = None
+    self._optimizer = None
+    # Component meta and configs are only needed on the instance
+    self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
+    self._pipe_configs = {}  # config by component
 
-        internal_name = cls.get_factory_name(name)
-        if internal_name in registry.factories:
-            # We only check for the internal name here – it's okay if it's a
-            # subclass and the base class has a factory of the same name. We
-            # also only raise if the function is different to prevent raising
-            # if module is reloaded. It's hacky, but we need to check the
-            # existing functure for a closure and whether that's identical
-            # to the component function (because factory_func created above
-            # will always be different, even for the same function)
-            existing_func = registry.factories.get(internal_name)
-            closure = existing_func.__closure__
-            wrapped = [c.cell_contents for c in closure][0] if closure else None
-            if util.is_same_func(wrapped, component_func):
-                factory_func = existing_func  # noqa: F811
-
-        cls.factory(
-            component_name,
-            assigns=assigns,
-            requires=requires,
-            retokenizes=retokenizes,
-            func=factory_func,
-        )
-        return component_func
-
-    if func is not None:  # Support non-decorator use cases
-        return add_component(func)
-    return add_component
+    if not isinstance(vocab, Vocab) and vocab is not True:
+        raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
+    if vocab is True:
+        vectors_name = meta.get("vectors", {}).get("name")
+        vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+    else:
+        if (self.lang and vocab.lang) and (self.lang != vocab.lang):
+            raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
+    self.vocab: Vocab = vocab
+    if self.lang is None:
+        self.lang = self.vocab.lang
+    self._components: List[Tuple[str, Callable[[Doc], Doc]]] = []
+    self._disabled: Set[str] = set()
+    self.max_length = max_length
+    # Create the default tokenizer from the default config
+    if not create_tokenizer:
+        tokenizer_cfg = {"tokenizer": self._config["nlp"]["tokenizer"]}
+        create_tokenizer = registry.resolve(tokenizer_cfg)["tokenizer"]
+    self.tokenizer = create_tokenizer(self)
+    self.batch_size = batch_size
+    self.default_error_handler = raise_error
 
 
-spacy.Language.factory = factory
-spacy.Language.component = component
+Language.factory = factory
+Language.__init__ = __init__
