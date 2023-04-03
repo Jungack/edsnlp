@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
-from . import SentenceSegmenter
+from .sentences import SentenceSegmenter
 
 DEFAULT_CONFIG = dict(
     punct_chars=None,

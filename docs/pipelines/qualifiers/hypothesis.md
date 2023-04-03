@@ -39,18 +39,10 @@ doc.ents[1]._.hypothesis
 
 The pipeline can be configured using the following parameters :
 
-| Parameter      | Explanation                                                | Default                           |
-| -------------- | ---------------------------------------------------------- | --------------------------------- |
-| `attr`         | spaCy attribute to match on (eg `NORM`, `TEXT`, `LOWER`)   | `"NORM"`                          |
-| `pseudo`       | Pseudo-hypothesis patterns                                 | `None` (use pre-defined patterns) |
-| `preceding`    | Preceding hypothesis patterns                              | `None` (use pre-defined patterns) |
-| `following`    | Following hypothesis patterns                              | `None` (use pre-defined patterns) |
-| `termination`  | Termination patterns (for syntagma/proposition extraction) | `None` (use pre-defined patterns) |
-| `verbs_hyp`    | Patterns for verbs that imply a hypothesis                 | `None` (use pre-defined patterns) |
-| `verbs_eds`    | Common verb patterns, checked for conditional mode         | `None` (use pre-defined patterns) |
-| `on_ents_only` | Whether to qualify pre-extracted entities only             | `True`                            |
-| `within_ents`  | Whether to look for hypothesis within entities             | `False`                           |
-| `explain`      | Whether to keep track of the cues for each entity          | `False`                           |
+
+::: edsnlp.pipelines.qualifiers.hypothesis.factory.create_component
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

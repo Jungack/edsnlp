@@ -64,12 +64,9 @@ This list contains expressions mentioning the date of creation/edition of a docu
 
 The pipeline can be configured using the following parameters :
 
-| Parameter               | Explanation                                                | Default                           |
-| ----------------------- | ---------------------------------------------------------- | --------------------------------- |
-| `consultation_mention`  | Whether to use consultation patterns, or list of patterns  | `True` (use pre-defined patterns) |
-| `town_mention`          | Whether to use town patterns, or list of patterns          | `False`                           |
-| `document_date_mention` | Whether to use document date patterns, or list of patterns | `False`                           |
-| `attr`                  | spaCy attribute to match on, eg `NORM` or `TEXT`           | `"NORM"`                          |
+::: edsnlp.pipelines.misc.consultation_dates.consultation_dates.ConsultationDates
+    options:
+       only_parameters: true
 
 ## Declared extensions
 

@@ -55,7 +55,7 @@ This snippet is complete, and should run as is.
 
 The pipeline can be configured using the following parameters :
 
-::: edsnlp.pipelines.core.terminology.factory.create_component
+::: edsnlp.pipelines.core.terminology.terminology.TerminologyMatcher
     options:
        only_parameters: true
 

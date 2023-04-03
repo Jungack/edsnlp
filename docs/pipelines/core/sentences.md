@@ -61,10 +61,11 @@ Notice how EDS-NLP's implementation is more robust to ill-defined sentence endin
 
 The pipeline can be configured using the following parameters :
 
-| Parameter      | Explanation                                                             | Default                           |
-| -------------- | ----------------------------------------------------------------------- | --------------------------------- |
-| `punct_chars`  | Punctuation patterns                                                    | `None` (use pre-defined patterns) |
-| `use_endlines` | Whether to use endlines prediction (see [documentation](./endlines.md)) | `True`                            |
+
+::: edsnlp.pipelines.core.sentences.sentences.SentenceSegmenter
+    options:
+       only_parameters: true
+
 
 ## Authors and citation
 

@@ -14,9 +14,9 @@ reasons = dict(
     ]
 )
 
-sections_reason = ["motif", "conclusion"]
+reason_sections = ["motif", "conclusion"]
 
-section_exclude = [
+excluded_sections = [
     "antécédents",
     "antécédents familiaux",
     "histoire de la maladie",

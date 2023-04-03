@@ -43,7 +43,7 @@ This snippet is complete, and should run as is.
 
 The pipeline can be configured using the following parameters :
 
-::: edsnlp.pipelines.core.matcher.factory.create_component
+::: edsnlp.pipelines.core.matcher.matcher.GenericMatcher
     options:
         only_parameters: true
 

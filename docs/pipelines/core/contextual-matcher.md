@@ -217,7 +217,7 @@ Let us see what we can get from this pipeline with a few examples
 
 The pipeline can be configured using the following parameters :
 
-::: edsnlp.pipelines.core.contextual_matcher.factory.create_component
+::: edsnlp.pipelines.core.contextual_matcher.contextual_matcher.ContextualMatcher
     options:
         only_parameters: true
 

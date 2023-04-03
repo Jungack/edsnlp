@@ -28,16 +28,15 @@ BEFORE_SNIPPET_LIMIT = 10
 
 class MergeStrategy(str, Enum):
     """
-    The strategy to use when merging measurements.
+    The strategy to use when merging measurements:
+
+    - `align`: Align the new measurement to existing spans
+    - `intersect`: Only extract measurements if they fall within an existing span
+    - `union`: Extract measurements even if whether they fall within an existing span
     """
 
-    # Align the new measurement to existing spans
     align = "align"
-
-    # Only extract measurements if they fall within an existing span
     intersect = "intersect"
-
-    # Extract measurements regardless of whether they fall within an existing span
     union = "union"
 
 
@@ -67,6 +66,19 @@ class UnitlessPatternConfigWithName(TypedDict):
 
 
 class MeasureConfig(TypedDict):
+    """
+    A measurement configuration has the following fields:
+
+    - unit (str): the unit of the measure (like "kg")
+    - unitless_patterns: optional patterns to handle unitless cases
+        - terms (list[str]): list of preceding terms used to trigger the measure
+        - ranges: mapping from ranges to unit to handle cases
+          like `Taille: 1.2 -> 1.20 m`
+            - `{"min": int,"max": int,"unit": str}`
+            - `{"min": int, "unit": str}`
+    - name (str): optional name for the measure
+    """
+
     unit: str
     unitless_patterns: NotRequired[List[UnitlessPatternConfig]]
     name: NotRequired[str]
@@ -258,6 +270,24 @@ class RangeMeasurement(Measurement):
 
 
 class MeasurementsMatcher:
+    """
+    Matcher component to extract measurements.
+    A measurements is most often composed of a number and a unit like
+    > 1,26 cm
+
+    The unit can also be positioned in place of the decimal dot/comma
+    > 1 cm 26
+
+    Some measurements can be composite
+    > 1,26 cm x 2,34 mm
+
+    And sometimes they are factorized
+    > Les trois kystes mesurent 1, 2 et 3cm.
+
+    The recognized measurements are stored in the "measurements" SpanGroup.
+    Each span has a `Measurement` object stored in the "value" extension attribute.
+    """
+
     def __init__(
         self,
         nlp: PipelineProtocol,
@@ -280,42 +310,14 @@ class MeasurementsMatcher:
         merge_mode: MergeStrategy = MergeStrategy.union,
     ):
         """
-        Matcher component to extract measurements.
-        A measurements is most often composed of a number and a unit like
-        > 1,26 cm
-        The unit can also be positioned in place of the decimal dot/comma
-        > 1 cm 26
-        Some measurements can be composite
-        > 1,26 cm x 2,34 mm
-        And sometimes they are factorized
-        > Les trois kystes mesurent 1, 2 et 3cm.
-
-        The recognized measurements are stored in the "measurements" SpanGroup.
-        Each span has a `Measurement` object stored in the "value" extension attribute.
-
         Parameters
         ----------
         nlp : PipelineProtocol
             The pipeline instance
         measurements : Optional[Union[List[Union[str, MeasureConfig]],Dict[str, MeasureConfig]]]
-            A mapping from measure names to MeasureConfig
-            Each measure's configuration has the following shape:
-            {
-                "unit": str, # the unit of the measure (like "kg"),
-                "unitless_patterns": { # optional patterns to handle unitless cases
-                    "terms": List[str], # list of preceding terms used to trigger the
-                    measure
-                    # Mapping from ranges to unit to handle cases like
-                    # ("Taille: 1.2" -> 1.20 m vs "Taille: 120" -> 120cm)
-                    "ranges": List[{
-                        "min": int,
-                        "max": int,
-                        "unit": str,
-                    }, {
-                        "min": int,
-                        "unit": str,
-                    }, ...],
-                }
+            measurements : Union[List[Union[str, MeasureConfig]],Dict[str, MeasureConfig]]
+            A mapping from measure names to [MeasureConfig][edsnlp.pipelines.misc.measurements.measurements.MeasureConfig]
+            Can also be a list of common measurement names, as defined in the pattern file.
         number_terms: Dict[str, List[str]
             A mapping of numbers to their lexical variants
         stopwords: List[str]
@@ -324,15 +326,18 @@ class MeasurementsMatcher:
             and a number
         unit_divisors: List[str]
             A list of terms used to divide two units (like: m / s)
+        range_patterns: List[Tuple[str, str]]
+            A list of "{FROM} xx {TO} yy" patterns to match range measurements
         attr : str
             Whether to match on the text ('TEXT') or on the normalized text ('NORM')
         ignore_excluded : bool
             Whether to exclude pollution patterns when matching in the text
         compose_units: bool
             Whether to compose units (like "m/s" or "m.s-1")
-        range_patterns: List[Tuple[str, str]]
-            A list of "{FROM} xx {TO} yy" patterns to match range measurements
-        """  # noqa E501
+        merge_mode: MergeStrategy
+            How to merge the matched spans with existing entities of the same label
+
+        """  # noqa: E501
 
         if measurements is None:
             measurements = [

@@ -88,12 +88,9 @@ doc.spans["section_titles"]
 
 The pipeline can be configured using the following parameters :
 
-| Parameter         | Explanation                                      | Default                           |
-| ----------------- | ------------------------------------------------ | --------------------------------- |
-| `sections`        | Sections patterns                                | `None` (use pre-defined patterns) |
-| `add_patterns`    | Whether add endlines patterns                    | `True`                            |
-| `attr`            | spaCy attribute to match on, eg `NORM` or `TEXT` | `"NORM"`                          |
-| `ignore_excluded` | Whether to ignore excluded tokens                | `True`                            |
+::: edsnlp.pipelines.misc.sections.sections.Sections
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

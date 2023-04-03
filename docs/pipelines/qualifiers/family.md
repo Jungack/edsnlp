@@ -39,14 +39,9 @@ doc.ents[1]._.family
 
 The pipeline can be configured using the following parameters :
 
-| Parameter      | Explanation                                                              | Default                           |
-| -------------- | ------------------------------------------------------------------------ | --------------------------------- |
-| `attr`         | spaCy attribute to match on (eg `NORM`, `TEXT`, `LOWER`)                 | `"NORM"`                          |
-| `family`       | Family patterns                                                          | `None` (use pre-defined patterns) |
-| `termination`  | Termination patterns (for syntagma/proposition extraction)               | `None` (use pre-defined patterns) |
-| `use_sections` | Whether to use pre-annotated sections (requires the `sections` pipeline) | `False`                           |
-| `on_ents_only` | Whether to qualify pre-extracted entities only                           | `True`                            |
-| `explain`      | Whether to keep track of the cues for each entity                        | `False`                           |
+::: edsnlp.pipelines.qualifiers.family.factory.create_component
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

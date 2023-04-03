@@ -1,10 +1,9 @@
 from loguru import logger
 from spacy.tokens import Doc, Span
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, List, Union
 
 from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.core.matcher import GenericMatcher
-from edsnlp.pipelines.misc.reason import patterns
 from edsnlp.utils.filter import get_spans
 from edsnlp.utils.inclusion import check_inclusion
 
@@ -18,35 +17,38 @@ class Reason(GenericMatcher):
     It also declares the boolean extension `is_reason`.
     This extension is set to True for the Reason Spans but also
     for the entities that overlap the reason span.
-
-    Parameters
-    ----------
-    nlp : PipelineProtocol
-        The pipeline instance
-    reasons : Optional[Dict[str, Union[List[str], str]]]
-        The terminology of reasons.
-    attr : str
-        spaCy's attribute to use:
-        a string with the value "TEXT" or "NORM", or a dict with
-        the key 'term_attr'. We can also add a key for each regex.
-    use_sections : bool,
-        whether or not use the `sections` pipeline to improve results.
-    ignore_excluded : bool
-        Whether to skip excluded tokens.
     """
 
     def __init__(
         self,
         nlp: PipelineProtocol,
-        reasons: Optional[Dict[str, Union[List[str], str]]],
-        attr: Union[Dict[str, str], str],
-        use_sections: bool,
-        ignore_excluded: bool,
+        reasons: Dict[str, Union[List[str], str]],
+        reason_sections: List[str],
+        excluded_sections: List[str],
+        use_sections: bool = False,
+        attr: Union[Dict[str, str], str] = "TEXT",
+        ignore_excluded: bool = False,
     ):
-
-        if reasons is None:
-            reasons = patterns.reasons
-
+        """
+        Parameters
+        ----------
+        nlp : Pipeline
+            EDS-NLP pipeline object
+        reasons : Dict[str, Union[List[str], str]]
+            The terminology of reasons.
+        reason_sections: List[str]
+            The list of sections that are considered as reasons.
+        excluded_sections: List[str]
+            The list of sections we don't search into.
+        use_sections : bool
+            Whether to use the `sections` pipeline to improve results.
+        attr : str
+            spaCy's attribute to use:
+            a string with the value "TEXT" or "NORM", or a dict with
+            the key 'term_attr'. We can also add a key for each regex.
+        ignore_excluded : bool
+            Whether to skip excluded tokens.
+        """
         super().__init__(
             nlp,
             terms=None,
@@ -55,8 +57,18 @@ class Reason(GenericMatcher):
             ignore_excluded=ignore_excluded,
         )
 
+        assert not (
+            use_sections and (reason_sections is None or excluded_sections is None)
+        ), (
+            "You must provide the `reason_sections` and `excluded_sections` "
+            "parameters when enabling the `use_sections` option."
+        )
+
+        self.reason_sections = reason_sections
+        self.excluded_sections = excluded_sections
+
         self.use_sections = use_sections and (
-            "eds.sections" in self.nlp.pipe_names or "sections" in self.nlp.pipe_names
+            "eds.sections" in nlp.pipe_names or "sections" in nlp.pipe_names
         )
         if use_sections and not self.use_sections:
             logger.warning(
@@ -76,15 +88,15 @@ class Reason(GenericMatcher):
         if not Span.has_extension("is_reason"):
             Span.set_extension("is_reason", default=False)
 
-    def _enhance_with_sections(self, sections: Iterable, reasons: Iterable) -> List:
+    def _enhance_with_sections(self, sections: List, reasons: List) -> List:
         """Enhance the list of reasons with the section information.
         If the reason overlaps with history, so it will be removed from the list
 
         Parameters
         ----------
-        sections : Iterable
+        sections : List
             Spans of sections identified with the `sections` pipeline
-        reasons : Iterable
+        reasons : List
             Reasons list identified by the regex
 
         Returns
@@ -94,10 +106,10 @@ class Reason(GenericMatcher):
         """
 
         for section in sections:
-            if section.label_ in patterns.sections_reason:
+            if section.label_ in self.reason_sections:
                 reasons.append(section)
 
-            if section.label_ in patterns.section_exclude:
+            if section.label_ in self.excluded_sections:
                 for reason in reasons:
                     if check_inclusion(reason, section.start, section.end):
                         reasons.remove(reason)

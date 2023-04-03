@@ -259,6 +259,7 @@ class FactoryRegistry(Registry):
             registerer(configure)
 
             # Also register the function with spaCy to maintain compatibility
+            print("registering !!")
             spacy.Language.factory(
                 name=name,
                 default_config=updated_default_config,

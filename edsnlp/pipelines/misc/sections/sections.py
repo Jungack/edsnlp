@@ -44,27 +44,30 @@ class Sections(GenericMatcher):
     document. These span from the start of one section title to the next,
     which can introduce obvious bias should an intermediate section title
     goes undetected.
-
-    Parameters
-    ----------
-    nlp : PipelineProtocol
-        spaCy pipeline object.
-    sections : Dict[str, List[str]]
-        Dictionary of terms to look for.
-    attr : str
-        Default attribute to match on.
-    ignore_excluded : bool
-        Whether to skip excluded tokens.
     """
 
     def __init__(
         self,
         nlp: PipelineProtocol,
-        sections: Dict[str, List[str]],
-        add_patterns: bool,
-        attr: str,
-        ignore_excluded: bool,
+        sections: Dict[str, List[str]] = None,
+        add_patterns: bool = True,
+        attr: str = "NORM",
+        ignore_excluded: bool = True,
     ):
+        """
+        Parameters
+        ----------
+        nlp : PipelineProtocol
+            spaCy pipeline object.
+        sections : Dict[str, List[str]]
+            Dictionary of terms to look for.
+        add_patterns: bool
+            Whether to update patterns to ensure a newline exists before and after.
+        attr : str
+            Default attribute to match on.
+        ignore_excluded : bool
+            Whether to skip excluded tokens.
+        """
 
         logger.warning(
             "The component Sections is still in Beta. Use at your own risks."

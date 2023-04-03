@@ -40,17 +40,10 @@ doc.ents[1]._.reported_speech
 
 The pipeline can be configured using the following parameters :
 
-| Parameter      | Explanation                                                | Default                           |
-| -------------- | ---------------------------------------------------------- | --------------------------------- |
-| `attr`         | spaCy attribute to match on (eg `NORM`, `TEXT`, `LOWER`)   | `"NORM"`                          |
-| `pseudo`       | Pseudo-reported speech patterns                            | `None` (use pre-defined patterns) |
-| `preceding`    | Preceding reported speech patterns                         | `None` (use pre-defined patterns) |
-| `following`    | Following reported speech patterns                         | `None` (use pre-defined patterns) |
-| `termination`  | Termination patterns (for syntagma/proposition extraction) | `None` (use pre-defined patterns) |
-| `verbs`        | Patterns for verbs that imply a reported speech            | `None` (use pre-defined patterns) |
-| `on_ents_only` | Whether to qualify pre-extracted entities only             | `True`                            |
-| `within_ents`  | Whether to look for reported speech within entities        | `False`                           |
-| `explain`      | Whether to keep track of the cues for each entity          | `False`                           |
+
+::: edsnlp.pipelines.qualifiers.reported_speech.factory.create_component
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

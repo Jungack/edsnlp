@@ -78,9 +78,9 @@ displacy.render(doc_exemple, style="ent", options={"colors": {"space": "red"}})
 
 The pipeline can be configured using the following parameters :
 
-| Parameter    | Explanation                      | Default  |
-| ------------ | -------------------------------- | -------- |
-| `model_path` | Path to the pre-trained pipeline | Required |
+::: edsnlp.pipelines.core.endlines.endlines.EndLines
+    options:
+       only_parameters: true
 
 ## Declared extensions
 

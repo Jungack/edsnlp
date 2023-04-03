@@ -125,7 +125,7 @@ the `value` attribute that is a `Measurement` instance.
 
 The pipeline can be configured using the following parameters :
 
-::: edsnlp.pipelines.misc.measurements.factory.create_component
+::: edsnlp.pipelines.misc.measurements.measurements.MeasurementsMatcher
     options:
         only_parameters: true
 

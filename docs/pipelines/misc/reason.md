@@ -62,12 +62,9 @@ ent._.is_reason
 
 The pipeline can be configured using the following parameters :
 
-| Parameter         | Explanation                                      | Default                           |
-| ----------------- | ------------------------------------------------ | --------------------------------- |
-| `reasons`         | Reasons patterns                                 | `None` (use pre-defined patterns) |
-| `attr`            | spaCy attribute to match on, eg `NORM` or `TEXT` | `"NORM"`                          |
-| `use_sections`    | Whether to use sections                          | `False`                           |
-| `ignore_excluded` | Whether to ignore excluded tokens                | `False`                           |
+::: edsnlp.pipelines.misc.reason.reason.Reason
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

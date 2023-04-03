@@ -22,14 +22,6 @@ class EndLines(GenericMatcher):
     is an end line character. Otherwise, it is  set to `False`
     if the new line is classified as a space. If no classification
     has been done over that token, it will remain `None`.
-
-    Parameters
-    ----------
-    nlp : PipelineProtocol
-        The pipeline instance
-
-    end_lines_model : Optional[Union[str, EndLinesModel]], by default None
-        path to trained model. If None, it will use a default model
     """
 
     def __init__(
@@ -38,6 +30,14 @@ class EndLines(GenericMatcher):
         end_lines_model: Optional[Union[str, EndLinesModel]],
         **kwargs,
     ):
+        """
+        Parameters
+        ----------
+        nlp : PipelineProtocol
+            The pipeline instance
+        end_lines_model : Optional[Union[str, EndLinesModel]], by default None
+            path to trained model. If None, it will use a default model
+        """
 
         super().__init__(
             nlp,

@@ -41,17 +41,10 @@ doc.ents[1]._.negation
 
 The pipeline can be configured using the following parameters :
 
-| Parameter      | Explanation                                                | Default                           |
-| -------------- | ---------------------------------------------------------- | --------------------------------- |
-| `attr`         | spaCy attribute to match on (eg `NORM`, `TEXT`, `LOWER`)   | `"NORM"`                          |
-| `pseudo`       | Pseudo-negation patterns                                   | `None` (use pre-defined patterns) |
-| `preceding`    | Preceding negation patterns                                | `None` (use pre-defined patterns) |
-| `following`    | Following negation patterns                                | `None` (use pre-defined patterns) |
-| `termination`  | Termination patterns (for syntagma/proposition extraction) | `None` (use pre-defined patterns) |
-| `verbs`        | Patterns for verbs that imply a negation                   | `None` (use pre-defined patterns) |
-| `on_ents_only` | Whether to qualify pre-extracted entities only             | `True`                            |
-| `within_ents`  | Whether to look for negations within entities              | `False`                           |
-| `explain`      | Whether to keep track of the cues for each entity          | `False`                           |
+
+::: edsnlp.pipelines.qualifiers.negation.factory.create_component
+    options:
+        only_parameters: true
 
 ## Declared extensions
 

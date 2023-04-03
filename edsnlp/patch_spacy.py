@@ -137,7 +137,9 @@ def __init__(
 
     # EDS-NLP: disable spacy default call to load every factory
     # since some of them may be missing dependencies (like torch)
-    # util.registry._entry_point_factories.get_all()
+    util.registry._entry_point_factories.get_all()
+
+    print("Wouldve get all but didn't")
 
     self._config = DEFAULT_CONFIG.merge(self.default_config)
     self._meta = dict(meta)
