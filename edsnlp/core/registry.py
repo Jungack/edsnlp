@@ -9,7 +9,7 @@ from weakref import WeakKeyDictionary
 
 import edsnlp
 from confit import Registry, Config, set_default_registry
-from confit.registry import validate_arguments
+from confit.registry import RegistryCollection
 from edsnlp.utils.collections import FrozenDict, FrozenList
 
 PIPE_META = WeakKeyDictionary()
@@ -53,12 +53,11 @@ class FactoryMeta:
 
 
 class CurriedFactory:
-    def __init__(self, func, factory_name, meta, kwargs):
+    def __init__(self, func, kwargs):
         self.kwargs = kwargs
         self.factory = func
-        self.factory_name = factory_name
+        # self.factory_name = factory_name
         self.instantiated = None
-        self.meta = meta
 
     def instantiate(
         obj: Any,
@@ -87,16 +86,16 @@ class CurriedFactory:
                     **kwargs,
                 }
             )
-            Config._store_resolved(
-                obj.instantiated,
-                Config(
-                    {
-                        "@factory": obj.factory_name,
-                        **kwargs,
-                    }
-                ),
-            )
-            PIPE_META[obj.instantiated] = obj.meta
+            # Config._store_resolved(
+            #     obj.instantiated,
+            #     Config(
+            #         {
+            #             "@factory": obj.factory_name,
+            #             **kwargs,
+            #         }
+            #     ),
+            # )
+            # PIPE_META[obj.instantiated] = obj.meta
             return obj.instantiated
         elif isinstance(obj, dict):
             return {
@@ -128,34 +127,40 @@ class FactoryRegistry(Registry):
         name (str): The name.
         RETURNS (Any): The registered function.
         """
-        namespace = list(self.namespace) + [name]
-        if catalogue.check_exists(*namespace):
-            return catalogue._get(namespace)
 
+        def curried(**kwargs):
+            defaults = Config(
+                {
+                    key: value.default
+                    for key, value in inspect.signature(func).parameters.items()
+                    if value.default is not inspect.Parameter.empty
+                    and key not in kwargs
+                }
+            ).resolve(registry=getattr(self, "registry", None))
+            return CurriedFactory(func, kwargs={**defaults, **kwargs})
+
+        namespace = list(self.namespace) + [name]
         spacy_namespace = ["spacy", "internal_factories", name]
-        if catalogue.check_exists(*spacy_namespace):
+        if catalogue.check_exists(*namespace):
+            func = catalogue._get(namespace)
+            return curried
+        elif catalogue.check_exists(*spacy_namespace):
             func = catalogue._get(spacy_namespace)
             meta = spacy.Language.get_factory_meta(name)
 
             def curried(**kwargs):
                 return CurriedFactory(
                     func,
-                    factory_name=name,
-                    meta=meta,
                     kwargs=Config(meta.default_config).merge(kwargs),
                 )
 
             return curried
 
-        found_entry_point = False
         if self.entry_points:
             self.get_entry_point(name)
-
             if catalogue.check_exists(*namespace):
-                found_entry_point = True
-
-        if found_entry_point:
-            return catalogue._get(namespace)
+                func = catalogue._get(namespace)
+                return curried
 
         available = self.get_available()
         current_namespace = " -> ".join(self.namespace)
@@ -195,74 +200,18 @@ class FactoryRegistry(Registry):
         -------
         Callable[[catalogue.InFunc], catalogue.InFunc]
         """
-        registerer = catalogue.Registry.register(self, name)
-
         save_params = {"@factory": name}
 
-        def curry_and_register(fn: catalogue.InFunc) -> catalogue.InFunc:
+        def register(fn: catalogue.InFunc) -> catalogue.InFunc:
 
             if len(accepted_arguments(fn, ["nlp", "name"])) < 2:
                 raise ValueError(
                     "Factory functions must accept nlp and name as arguments."
                 )
-            # Officially register the factory, so we can later call
-            # registry.resolve and refer to it in the config as
-            # @factories = "spacy.Language.xyz". We use the class name here so
-            # different classes can have different factories.
 
-            validated_fn = validate_arguments(
-                fn,
-                config={"arbitrary_types_allowed": True},
-                save_params=save_params,
-                skip_save_params=["nlp", "name"],
-            )
-
-            # get default arguments from the function signature
-            # using inspect
-            inspect_args = inspect.signature(fn).parameters
-            updated_default_config = Config(default_config).merge(
-                {
-                    key: value.default
-                    for key, value in inspect_args.items()
-                    if value.default is not inspect.Parameter.empty
-                }
-            )
-            updated_default_config.pop("nlp", None)
-            updated_default_config.pop("name", None)
-            # merge with the default config
-            meta = FactoryMeta(
-                assigns=validate_attrs(assigns),
-                requires=validate_attrs(requires),
-                retokenizes=retokenizes,
-                default_config=updated_default_config,
-            )
-
-            @wraps(
-                fn,
-                assigned=(
-                    "__module__",
-                    "__name__",
-                    "__qualname__",
-                    "__doc__",
-                    "__annotations__",
-                    "__signature__",
-                ),
-            )
-            def configure(**kwargs):
-                return CurriedFactory(
-                    func=validated_fn,
-                    factory_name=name,
-                    meta=meta,
-                    kwargs=updated_default_config.merge(kwargs),
-                )
-
-            registerer(configure)
-
-            # Also register the function with spaCy to maintain compatibility
-            print("registering !!")
             spacy.Language.factory(
                 name=name,
-                default_config=updated_default_config,
+                default_config=default_config,
                 assigns=assigns,
                 requires=requires,
                 default_score_weights=default_score_weights,
@@ -270,15 +219,37 @@ class FactoryRegistry(Registry):
                 func=fn,
             )
 
-            return validated_fn
+            meta = FactoryMeta(
+                assigns=validate_attrs(assigns),
+                requires=validate_attrs(requires),
+                retokenizes=retokenizes,
+                default_config=default_config,
+            )
+
+            @wraps(fn)
+            def instantiate_and_save_meta(*args, **kwargs):
+                instantiated = fn(*args, **kwargs)
+                PIPE_META[instantiated] = meta
+                return instantiated
+
+            registered_fn = Registry.register(
+                self,
+                name=name,
+                save_params=save_params,
+                skip_save_params=["nlp", "name"],
+                default_config=default_config,
+                func=instantiate_and_save_meta,
+            )
+
+            return registered_fn
 
         if func is not None:
-            return curry_and_register(func)
+            return register(func)
         else:
-            return curry_and_register
+            return register
 
 
-class registry:
+class registry(RegistryCollection):
     factory = factories = FactoryRegistry(("spacy", "factories"), entry_points=True)
     misc = Registry(("spacy", "misc"), entry_points=True)
     languages = Registry(("spacy", "languages"), entry_points=True)

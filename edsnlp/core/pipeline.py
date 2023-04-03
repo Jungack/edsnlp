@@ -1,23 +1,22 @@
 # ruff: noqa: E501
-import os
-
-import shutil
-
-import warnings
 from collections import defaultdict
 
 import copy
 import functools
+import os
+import shutil
+import spacy
 import srsly
 import time
+import warnings
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from spacy.language import BaseDefaults
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
-from spacy.vocab import Vocab, create_vocab
 from spacy.util import get_lang_class
+from spacy.vocab import Vocab, create_vocab
 from tqdm import tqdm
 from typing import (
     Iterable,
@@ -30,13 +29,12 @@ from typing import (
     Sequence,
     List,
     Type,
-    Protocol,
 )
 
 from confit import Config
 from confit.utils.collections import split_path, join_path
 from confit.utils.xjson import Reference
-from edsnlp.core.registry import CurriedFactory
+from edsnlp.core.registry import CurriedFactory, PIPE_META
 from edsnlp.utils.collections import (
     batchify,
     multi_tee,
@@ -56,24 +54,6 @@ class CacheEnum(str, Enum):
 
 
 Pipe = Callable[[Doc], Doc]
-
-
-class PipelineProtocol(Protocol):
-    pipe_names: List[str]
-    vocab: Vocab
-    config: Config
-    meta: Dict[str, Any]
-    lang: str
-    tokenizer: Tokenizer
-
-    def __call__(self, text: str) -> Doc:
-        ...
-
-    def pipe(self, texts: Iterable[str], batch_size: int) -> Iterable[Doc]:
-        ...
-
-    def get_pipe_meta(self, name):
-        ...
 
 
 class Pipeline:
@@ -246,6 +226,22 @@ class Pipeline:
                 pipe.name = name
         self._components.append((name, pipe))
         return pipe
+
+    def get_pipe_meta(self, name: str) -> Dict[str, Any]:
+        """
+        Get the meta information for a component.
+
+        Parameters
+        ----------
+        name: str
+            The name of the component to get the meta for.
+
+        Returns
+        -------
+        Dict[str, Any]
+        """
+        pipe = self.get_pipe(name)
+        return PIPE_META.get(pipe, {})
 
     def make_doc(self, text: str) -> Doc:
         """
@@ -887,6 +883,42 @@ class Pipeline:
         config["components"] = config["nlp"].pop("components")
         return config.serialize()
 
+    @contextmanager
+    def select_pipes(
+        self,
+        *,
+        disable: Optional[Union[str, Iterable[str]]] = None,
+        enable: Optional[Union[str, Iterable[str]]] = None,
+    ):
+        """
+        Temporarily disable and enable components in the pipeline.
+
+        Parameters
+        ----------
+        disable: Optional[Union[str, Iterable[str]]]
+            The name of the component to disable, or a list of names.
+        enable: Optional[Union[str, Iterable[str]]]
+            The name of the component to enable, or a list of names.
+        """
+        if enable is None and disable is None:
+            raise ValueError("Expected either `enable` or `disable`")
+        if isinstance(disable, str):
+            disable = [disable]
+        if enable is not None:
+            if isinstance(enable, str):
+                enable = [enable]
+            to_disable = [pipe for pipe in self.pipe_names if pipe not in enable]
+            # raise an error if the enable and disable keywords are not consistent
+            if disable is not None and disable != to_disable:
+                raise ValueError("Inconsistent values for `enable` and `disable`")
+            disable = to_disable
+
+        disabled_before = self._disabled
+
+        self._disabled = disable
+        yield self
+        self._disabled = disabled_before
+
 
 def blank(
     lang: str,
@@ -919,3 +951,6 @@ def blank(
             "The language specified in the config does not match the lang argument."
         )
     return Pipeline.from_config({"lang": lang, **config})
+
+
+PipelineProtocol = Union[Pipeline, spacy.Language]
