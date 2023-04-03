@@ -6,7 +6,7 @@ from .accents.factory import DEFAULT_CONFIG as accents_config
 from .normalizer import Normalizer
 from .pollution.factory import DEFAULT_CONFIG as pollution_config
 from .quotes.factory import DEFAULT_CONFIG as quotes_config
-from .remove_lowercase.remove_lowercase import DEFAULT_CONFIG as remove_lowercase_config
+from .remove_lowercase.factory import DEFAULT_CONFIG as remove_lowercase_config
 from .spaces.factory import DEFAULT_CONFIG as spaces_config
 
 DEFAULT_CONFIG = dict(

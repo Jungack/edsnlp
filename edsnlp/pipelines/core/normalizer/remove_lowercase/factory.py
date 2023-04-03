@@ -4,13 +4,15 @@ from spacy.tokens import Doc
 
 from edsnlp.core import registry, PipelineProtocol
 from edsnlp.utils.deprecation import deprecated_factory
-from edsnlp.utils.factories import get_default_config
 
 
 def remove_lowercase(doc: Doc):
     for token in doc:
         token.norm_ = token.text
     return doc
+
+
+DEFAULT_CONFIG = dict()
 
 
 @deprecated_factory("remove_lowercase", "eds.remove_lowercase", assigns=["token.norm"])
@@ -34,4 +36,3 @@ def create_component(nlp: PipelineProtocol, name: str) -> Callable:
 
 
 RemoveLowercase = create_component
-DEFAULT_CONFIG = get_default_config(create_component)
