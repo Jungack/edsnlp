@@ -2,12 +2,24 @@ from typing import Any, Dict, Union
 
 from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
-from .accents.factory import DEFAULT_CONFIG as accents_config
+from .accents.factory import (
+    DEFAULT_CONFIG as accents_config,
+    create_component as create_accents,
+)
 from .normalizer import Normalizer
-from .pollution.factory import DEFAULT_CONFIG as pollution_config
-from .quotes.factory import DEFAULT_CONFIG as quotes_config
-from .remove_lowercase.factory import DEFAULT_CONFIG as remove_lowercase_config
-from .spaces.factory import DEFAULT_CONFIG as spaces_config
+from .pollution.factory import (
+    DEFAULT_CONFIG as pollution_config,
+    create_component as create_pollution,
+)
+from .quotes.factory import (
+    DEFAULT_CONFIG as quotes_config,
+    create_component as create_quotes,
+)
+from .remove_lowercase.factory import create_component as create_remove_lowercase
+from .spaces.factory import (
+    DEFAULT_CONFIG as spaces_config,
+    create_component as create_spaces,
+)
 
 DEFAULT_CONFIG = dict(
     accents=True,
@@ -30,8 +42,8 @@ DEFAULT_CONFIG = dict(
 def create_component(
     nlp: PipelineProtocol,
     name: str,
+    lowercase: Union[bool, Dict[str, Any]] = True,
     accents: Union[bool, Dict[str, Any]] = True,
-    remove_lowercase: Union[bool, Dict[str, Any]] = True,
     quotes: Union[bool, Dict[str, Any]] = True,
     spaces: Union[bool, Dict[str, Any]] = True,
     pollution: Union[bool, Dict[str, Any]] = True,
@@ -40,7 +52,7 @@ def create_component(
     Normalisation pipeline. Modifies the `NORM` attribute,
     acting on five dimensions :
 
-    - `remove_lowercase`: using the `TEXT` attribute as a base for `NORM`.
+    - `lowercase`: using the `TEXT` attribute as a base for `NORM`.
     - `accents`: deterministic and fixed-length normalisation of accents.
     - `quotes`: deterministic and fixed-length normalisation of quotation marks.
     - `spaces`: "removal" of spaces tokens (via the tag_ attribute).
@@ -48,7 +60,7 @@ def create_component(
 
     Parameters
     ----------
-    remove_lowercase : Union[bool, Dict[str, Any]]
+    lowercase : Union[bool, Dict[str, Any]]
         Whether to remove case.
     accents : Union[bool, Dict[str, Any]]
         `Accents` configuration object
@@ -60,39 +72,33 @@ def create_component(
         Optional `Pollution` configuration object.
     """
 
-    if remove_lowercase:
-        config = dict(**remove_lowercase_config)
-        if isinstance(remove_lowercase, dict):
-            config.update(remove_lowercase)
-        remove_lowercase = registry.get("factories", "eds.remove_lowercase")(
-            nlp, "eds.remove_lowercase", **config
-        )
+    remove_lowercase = None
+    if not lowercase:
+        remove_lowercase = create_remove_lowercase(nlp=nlp, name="eds.remove_lowercase")
 
     if accents:
         config = dict(**accents_config)
         if isinstance(accents, dict):
             config.update(accents)
-        accents = registry.get("factories", "eds.accents")(nlp, "eds.accents", **config)
+        accents = create_accents(nlp=nlp, name="eds.accents", **config)
 
     if quotes:
         config = dict(**quotes_config)
         if isinstance(quotes, dict):
             config.update(quotes)
-        quotes = registry.get("factories", "eds.quotes")(nlp, "eds.quotes", **config)
+        quotes = create_quotes(nlp=nlp, name="eds.quotes", **config)
 
     if spaces:
         config = dict(**spaces_config)
         if isinstance(spaces, dict):
             config.update(spaces)
-        spaces = registry.get("factories", "eds.spaces")(nlp, "eds.spaces", **config)
+        spaces = create_spaces(nlp=nlp, name="eds.spaces", **config)
 
     if pollution:
         config = dict(**pollution_config["pollution"])
         if isinstance(pollution, dict):
-            config.update(pollution)
-        pollution = registry.get("factories", "eds.pollution")(
-            nlp, "eds.pollution", pollution=config
-        )
+            config.update(pollution["pollution"])
+        pollution = create_pollution(nlp=nlp, name="eds.pollution", pollution=config)
 
     normalizer = Normalizer(
         remove_lowercase=remove_lowercase or None,

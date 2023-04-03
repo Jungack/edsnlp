@@ -12,7 +12,7 @@ def check_normalizer(nlp: PipelineProtocol) -> None:
     components = {name: component for name, component in nlp.pipeline}
     normalizer = components.get("normalizer")
 
-    if normalizer and not normalizer.lowercase:
+    if normalizer and normalizer.remove_lowercase:
         logger.warning(
             "You have chosen the NORM attribute, but disabled lowercasing "
             "in your normalisation pipeline. "

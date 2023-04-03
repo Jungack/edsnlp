@@ -96,7 +96,7 @@ class Score(ContextualMatcher):
         self.score_name = score_name
 
         if isinstance(score_normalization, str):
-            self.score_normalization = registry.get("misc", score_normalization)
+            self.score_normalization = registry.misc.get(score_normalization)
         else:
             self.score_normalization = score_normalization
 

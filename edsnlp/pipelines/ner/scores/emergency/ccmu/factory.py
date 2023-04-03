@@ -30,7 +30,7 @@ DEFAULT_CONFIG = dict(
 )
 def create_component(
     nlp: PipelineProtocol,
-    name: str = "eds.emergency.ccmu",
+    name: str,
     regex: List[str] = patterns.regex,
     value_extract: str = patterns.value_extract,
     score_normalization: Union[
@@ -73,7 +73,7 @@ def create_component(
     """
     return Score(
         nlp,
-        score_name=name,
+        score_name="ccmu",
         regex=regex,
         value_extract=value_extract,
         score_normalization=score_normalization,

@@ -34,7 +34,7 @@ def nlp_factory(blank_nlp):
             p = dict(pollution=pollution)
 
         blank_nlp.add_pipe(
-            "normalizer",
+            "eds.normalizer",
             config=dict(
                 accents=a,
                 lowercase=lc,

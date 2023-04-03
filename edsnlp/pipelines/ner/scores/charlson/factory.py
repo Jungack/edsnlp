@@ -43,7 +43,7 @@ def create_component(
 ):
     return Score(
         nlp,
-        score_name=name,
+        score_name="charlson",
         regex=regex,
         value_extract=value_extract,
         score_normalization=score_normalization,

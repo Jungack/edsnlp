@@ -26,14 +26,14 @@ DEFAULT_CONFIG = dict(
 )
 def create_component(
     nlp: PipelineProtocol,
-    name: str = "eds.matcher",
-    terms: Optional[Dict[str, Union[str, List[str]]]] = None,
-    attr: Union[str, Dict[str, str]] = None,
-    regex: Optional[Dict[str, Union[str, List[str]]]] = "TEXT",
-    ignore_excluded: bool = False,
-    ignore_space_tokens: bool = False,
-    term_matcher: GenericTermMatcher = GenericTermMatcher.exact,
-    term_matcher_config: Dict[str, Any] = {},
+    name: str,
+    terms: Optional[Dict[str, Union[str, List[str]]]],
+    attr: Union[str, Dict[str, str]],
+    regex: Optional[Dict[str, Union[str, List[str]]]],
+    ignore_excluded: bool,
+    ignore_space_tokens: bool,
+    term_matcher: GenericTermMatcher,
+    term_matcher_config: Dict[str, Any],
 ):
     """
     Provides a generic matcher component.

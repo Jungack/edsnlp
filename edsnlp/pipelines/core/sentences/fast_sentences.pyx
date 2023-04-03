@@ -13,24 +13,6 @@ from .terms import punctuation
 
 
 cdef class FastSentenceSegmenter(object):
-    """
-    Segments the Doc into sentences using a rule-based strategy,
-    specific to AP-HP documents.
-
-    Applies the same rule-based pipeline as spaCy's sentencizer,
-    and adds a simple rule on the new lines : if a new line is followed by a
-    capitalised word, then it is also an end of sentence.
-
-    DOCS: https://spacy.io/api/sentencizer
-
-    Arguments
-    ---------
-    punct_chars : Optional[List[str]]
-        Punctuation characters.
-    use_endlines : bool
-        Whether to use endlines prediction.
-    """
-
     def __init__(
         self,
         vocab: Vocab,

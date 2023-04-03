@@ -30,7 +30,7 @@ def create_component(
     ignore_excluded: bool,
 ):
     return SentenceSegmenter(
-        nlp.vocab,
+        vocab=nlp.vocab,
         punct_chars=punct_chars,
         use_endlines=use_endlines,
         ignore_excluded=ignore_excluded,

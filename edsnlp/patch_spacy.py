@@ -58,7 +58,7 @@ def factory(
 
     def add_factory(factory_func: Callable) -> Callable:
         internal_name = cls.get_factory_name(name)
-        if internal_name in registry.factories:
+        if internal_name in registry.factories.namespace:
             # We only check for the internal name here – it's okay if it's a
             # subclass and the base class has a factory of the same name. We
             # also only raise if the function is different to prevent raising
@@ -92,9 +92,11 @@ def factory(
         # backwards-compat (writing to Language.factories directly). This
         # wouldn't work with an instance property and just produce a
         # confusing error – here we can show a custom error
+        registry.factories.entry_points = False
         cls.factories = SimpleFrozenDict(
             registry.factories.get_all(), error=Errors.E957
         )
+        registry.factories.entry_points = True
         return factory_func
 
     if func is not None:  # Support non-decorator use cases
@@ -137,9 +139,8 @@ def __init__(
 
     # EDS-NLP: disable spacy default call to load every factory
     # since some of them may be missing dependencies (like torch)
-    util.registry._entry_point_factories.get_all()
-
-    print("Wouldve get all but didn't")
+    # util.registry._entry_point_factories.get_all()
+    util.registry.factories = util.registry._entry_point_factories
 
     self._config = DEFAULT_CONFIG.merge(self.default_config)
     self._meta = dict(meta)
