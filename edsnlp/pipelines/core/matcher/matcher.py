@@ -19,31 +19,6 @@ class GenericTermMatcher(str, Enum):
 class GenericMatcher(BaseComponent):
     """
     Provides a generic matcher component.
-
-    Parameters
-    ----------
-    nlp : PipelineProtocol
-        The pipeline instance
-    terms : Optional[Patterns]
-        A dictionary of terms.
-    regex : Optional[Patterns]
-        A dictionary of regular expressions.
-    attr : str
-        The default attribute to use for matching.
-        Can be overridden using the `terms` and `regex` configurations.
-    ignore_excluded : bool
-        Whether to skip excluded tokens (requires an upstream
-        pipeline to mark excluded tokens).
-    ignore_space_tokens: bool
-        Whether to skip space tokens during matching.
-
-        You won't be able to match on newlines if this is enabled and
-        the "spaces"/"newline" option of `eds.normalizer` is enabled (by default).
-    term_matcher: GenericTermMatcher
-        The matcher to use for matching phrases ?
-        One of (exact, simstring)
-    term_matcher_config: Dict[str,Any]
-        Parameters of the matcher class
     """
 
     def __init__(
@@ -57,6 +32,32 @@ class GenericMatcher(BaseComponent):
         term_matcher: GenericTermMatcher = GenericTermMatcher.exact,
         term_matcher_config: Dict[str, Any] = None,
     ):
+        """
+        Parameters
+        ----------
+        nlp : PipelineProtocol
+            The pipeline instance
+        terms : Optional[Patterns]
+            A dictionary of terms.
+        regex : Optional[Patterns]
+            A dictionary of regular expressions.
+        attr : str
+            The default attribute to use for matching.
+            Can be overridden using the `terms` and `regex` configurations.
+        ignore_excluded : bool
+            Whether to skip excluded tokens (requires an upstream
+            pipeline to mark excluded tokens).
+        ignore_space_tokens: bool
+            Whether to skip space tokens during matching.
+
+            You won't be able to match on newlines if this is enabled and
+            the "spaces"/"newline" option of `eds.normalizer` is enabled (by default).
+        term_matcher: GenericTermMatcher
+            The matcher to use for matching phrases ?
+            One of (exact, simstring)
+        term_matcher_config: Dict[str,Any]
+            Parameters of the matcher class
+        """
 
         self.nlp = nlp
 
