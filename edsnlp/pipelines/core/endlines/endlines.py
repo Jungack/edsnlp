@@ -1,14 +1,12 @@
-import pickle
-from typing import List, Optional, Union
-
 import numpy as np
 import pandas as pd
-from spacy.language import Language
+import pickle
 from spacy.tokens import Doc, Span, Token
+from typing import List, Optional, Union
 
+from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.core.matcher import GenericMatcher
 from edsnlp.utils.filter import get_spans
-
 from .endlinesmodel import EndLinesModel
 from .functional import build_path
 
@@ -27,8 +25,8 @@ class EndLines(GenericMatcher):
 
     Parameters
     ----------
-    nlp : Language
-        spaCy nlp pipeline to use for matching.
+    nlp : PipelineProtocol
+        The pipeline instance
 
     end_lines_model : Optional[Union[str, EndLinesModel]], by default None
         path to trained model. If None, it will use a default model
@@ -36,7 +34,7 @@ class EndLines(GenericMatcher):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         end_lines_model: Optional[Union[str, EndLinesModel]],
         **kwargs,
     ):

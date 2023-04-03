@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from spacy.language import Language
-
-from edsnlp.pipelines.qualifiers.history import History, patterns
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.pipelines.terminations import termination
 from edsnlp.utils.deprecation import deprecated_factory
+from . import patterns
+from .history import History
 
 DEFAULT_CONFIG = dict(
     attr="NORM",
@@ -38,13 +38,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["span._.history"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.history",
     default_config=DEFAULT_CONFIG,
     assigns=["span._.history"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     history: Optional[List[str]],
     termination: Optional[List[str]],

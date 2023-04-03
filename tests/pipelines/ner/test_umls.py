@@ -4,9 +4,7 @@ pytest.importorskip("umls_downloader", reason="umls_downloader package not found
 
 import os  # noqa: E402
 from pathlib import Path  # noqa: E402
-
-from spacy.language import Language  # noqa: E402
-
+from edsnlp.core import PipelineProtocol  # noqa: E402
 from edsnlp.pipelines.ner.umls.patterns import get_path, get_patterns  # noqa: E402
 from edsnlp.utils.examples import parse_example  # noqa: E402
 
@@ -19,7 +17,6 @@ pattern_config = {"lang": ["FRE"], "sources": ["MSHFRE"]}
 
 
 def test_get_patterns():
-
     path, _, _ = get_path(pattern_config)
     assert isinstance(path, Path)
 
@@ -41,7 +38,7 @@ def test_get_patterns():
     assert len(patterns) == 48587
 
 
-def test_add_pipe(blank_nlp: Language):
+def test_add_pipe(blank_nlp: PipelineProtocol):
     path, _, _ = get_path(pattern_config)
     if not path.exists():
         pytest.xfail(

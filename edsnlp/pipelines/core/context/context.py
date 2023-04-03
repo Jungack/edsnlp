@@ -1,8 +1,7 @@
+from spacy.tokens import Doc
 from typing import List
 
-from spacy.language import Language
-from spacy.tokens import Doc
-
+from edsnlp.core import PipelineProtocol
 from ...base import BaseComponent
 
 
@@ -12,15 +11,15 @@ class ContextAdder(BaseComponent):
 
     Parameters
     ----------
-    nlp : Language
-        The spaCy object.
+    nlp : PipelineProtocol
+        The pipeline instance
     context : List[str]
         The list of extensions to add to the `Doc`
     """
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         context: List[str],
     ):
 

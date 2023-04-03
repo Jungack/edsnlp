@@ -1,7 +1,6 @@
 from typing import List, Union
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.pipelines.misc.consultation_dates import ConsultationDates
 from edsnlp.utils.deprecation import deprecated_factory
 
@@ -19,13 +18,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["doc._.consultation_dates"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.consultation_dates",
     default_config=DEFAULT_CONFIG,
     assigns=["doc._.consultation_dates"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     attr: str,
     consultation_mention: Union[List[str], bool],

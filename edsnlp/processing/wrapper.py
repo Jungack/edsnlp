@@ -1,8 +1,7 @@
+from spacy.tokens import Doc
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from spacy import Language
-from spacy.tokens import Doc
-
+from edsnlp.core import PipelineProtocol
 from .helpers import DataFrameModules, DataFrames, get_module
 from .parallel import pipe as parallel_pipe
 from .simple import ExtensionSchema
@@ -11,7 +10,7 @@ from .simple import pipe as simple_pipe
 
 def pipe(
     note: DataFrames,
-    nlp: Language,
+    nlp: PipelineProtocol,
     n_jobs: int = -2,
     context: List[str] = [],
     results_extractor: Optional[Callable[[Doc], List[Dict[str, Any]]]] = None,
@@ -27,7 +26,7 @@ def pipe(
     ----------
     note : DataFrame
         A pandas/pyspark/koalas DataFrame with a `note_id` and `note_text` column
-    nlp : Language
+    nlp : PipelineProtocol
         A spaCy pipe
     context : List[str]
         A list of column to add to the generated SpaCy document as an extension.

@@ -1,9 +1,8 @@
+from loguru import logger
+from spacy.tokens import Doc, Span
 from typing import Dict, Iterable, List, Optional, Union
 
-from loguru import logger
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.core.matcher import GenericMatcher
 from edsnlp.pipelines.misc.reason import patterns
 from edsnlp.utils.filter import get_spans
@@ -22,8 +21,8 @@ class Reason(GenericMatcher):
 
     Parameters
     ----------
-    nlp : Language
-        spaCy nlp pipeline to use for matching.
+    nlp : PipelineProtocol
+        The pipeline instance
     reasons : Optional[Dict[str, Union[List[str], str]]]
         The terminology of reasons.
     attr : str
@@ -38,7 +37,7 @@ class Reason(GenericMatcher):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         reasons: Optional[Dict[str, Union[List[str], str]]],
         attr: Union[Dict[str, str], str],
         use_sections: bool,

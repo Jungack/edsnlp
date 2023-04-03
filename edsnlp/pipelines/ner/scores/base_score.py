@@ -1,10 +1,9 @@
 import re
+from spacy.tokens import Doc, Span
 from typing import Any, Callable, Dict, List, Union
 
-from spacy import registry
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp import registry
+from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.core.contextual_matcher import ContextualMatcher
 from edsnlp.utils.filter import filter_spans
 
@@ -14,7 +13,7 @@ class Score(ContextualMatcher):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         score_name: str,
         regex: List[str],
         attr: str,
@@ -28,8 +27,8 @@ class Score(ContextualMatcher):
         """
         Parameters
         ----------
-        nlp : Language
-            The spaCy object.
+        nlp : PipelineProtocol
+            The pipeline instance
         score_name : str
             The name of the extracted score
         regex : List[str]

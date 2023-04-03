@@ -1,10 +1,9 @@
 import re
 from typing import Any, Callable, Dict, List, Union
 
-from spacy.language import Language
-
-from edsnlp.pipelines.ner.scores.sofa import Sofa, patterns
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from . import Sofa, patterns
 
 DEFAULT_CONFIG = dict(
     regex=patterns.regex,
@@ -24,13 +23,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.SOFA",
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     regex: List[str] = patterns.regex,
     value_extract: List[Dict[str, str]] = patterns.value_extract,
@@ -48,8 +47,8 @@ def create_component(
 
     Parameters
     ----------
-    nlp : Language
-        The spaCy object.
+    nlp : PipelineProtocol
+        The pipeline instance
     name : str
         The name of the extracted score
     regex : List[str]

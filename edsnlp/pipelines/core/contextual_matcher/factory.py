@@ -1,10 +1,9 @@
 import re
 from typing import Any, Dict, List, Union
 
-from spacy.language import Language
-
-from edsnlp.pipelines.core.contextual_matcher import ContextualMatcher
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from .contextual_matcher import ContextualMatcher
 
 DEFAULT_CONFIG = dict(
     attr="NORM",
@@ -20,9 +19,9 @@ DEFAULT_CONFIG = dict(
 @deprecated_factory(
     "contextual-matcher", "eds.contextual-matcher", default_config=DEFAULT_CONFIG
 )
-@Language.factory("eds.contextual-matcher", default_config=DEFAULT_CONFIG)
+@registry.factory.register("eds.contextual-matcher", default_config=DEFAULT_CONFIG)
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     patterns: Union[Dict[str, Any], List[Dict[str, Any]]],
     assign_as_span: bool,
@@ -39,8 +38,8 @@ def create_component(
 
     Parameters
     ----------
-    nlp : Language
-        spaCy `Language` object.
+    nlp : PipelineProtocol
+        The pipeline instance
     name : str
         The name of the pipe
     patterns: Union[Dict[str, Any], List[Dict[str, Any]]]

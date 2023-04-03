@@ -1,14 +1,12 @@
+from spacy.tokens import Doc, Span, Token
 from typing import List, Optional
 
-from spacy.language import Language
-from spacy.tokens import Doc, Span, Token
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.qualifiers.base import Qualifier
 from edsnlp.pipelines.terminations import termination
 from edsnlp.utils.filter import consume_spans, filter_spans, get_spans
 from edsnlp.utils.inclusion import check_inclusion
 from edsnlp.utils.resources import get_verbs
-
 from .patterns import following, preceding, pseudo, verbs_eds, verbs_hyp
 
 
@@ -27,8 +25,8 @@ class Hypothesis(Qualifier):
 
     Parameters
     ----------
-    nlp : Language
-        spaCy nlp pipeline to use for matching.
+    nlp : PipelineProtocol
+        The pipeline instance
     pseudo : Optional[List[str]]
         List of pseudo hypothesis cues.
     preceding : Optional[List[str]]
@@ -67,7 +65,7 @@ class Hypothesis(Qualifier):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         attr: str,
         pseudo: Optional[List[str]],
         preceding: Optional[List[str]],

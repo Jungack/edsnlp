@@ -1,10 +1,8 @@
 from typing import Any, Dict, List, Optional, Union
 
-from spacy.language import Language
-
-from edsnlp.pipelines.core.matcher import GenericMatcher
-from edsnlp.pipelines.core.matcher.matcher import GenericTermMatcher
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from .matcher import GenericMatcher, GenericTermMatcher
 
 DEFAULT_CONFIG = dict(
     terms=None,
@@ -23,11 +21,11 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.matcher", default_config=DEFAULT_CONFIG, assigns=["doc.ents", "doc.spans"]
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str = "eds.matcher",
     terms: Optional[Dict[str, Union[str, List[str]]]] = None,
     attr: Union[str, Dict[str, str]] = None,
@@ -42,8 +40,8 @@ def create_component(
 
     Parameters
     ----------
-    nlp : Language
-        The spaCy object.
+    nlp : PipelineProtocol
+        The pipeline instance
     name: str
         The name of the component.
     terms : Optional[Patterns]

@@ -1,7 +1,7 @@
 import re
 from typing import Any, Callable, List, Union
 
-from spacy.language import Language
+from edsnlp.core import PipelineProtocol, registry
 
 from edsnlp.pipelines.ner.scores import Score
 from edsnlp.pipelines.ner.scores.elstonellis import patterns
@@ -18,13 +18,13 @@ DEFAULT_CONFIG = dict(
 )
 
 
-@Language.factory(
+@registry.factory.register(
     "eds.elston-ellis",
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     regex: List[str] = patterns.regex,
     value_extract: str = patterns.value_extract,
@@ -42,7 +42,7 @@ def create_component(
 
     Parameters
     ----------
-    nlp: Language
+    nlp: PipelineProtocol
         The spaCy Language object
     name: str
         The name of the component

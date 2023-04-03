@@ -1,18 +1,17 @@
-import pickle
-from typing import Any, Dict, Iterable
-
 import numpy as np
 import pandas as pd
+import pickle
 from numpy.lib.function_base import iterable
 from pandas.api.types import CategoricalDtype
 from pandas.core.groupby import DataFrameGroupBy
 from scipy.sparse import hstack
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import OneHotEncoder
-from spacy.language import Language
 from spacy.strings import StringStore
 from spacy.tokens import Doc
+from typing import Any, Dict, Iterable
 
+from edsnlp.core import PipelineProtocol
 from .functional import _convert_series_to_array
 
 
@@ -21,11 +20,11 @@ class EndLinesModel:
 
     Parameters
     ----------
-    nlp : Language
-        spaCy nlp pipeline to use for matching.
+    nlp : PipelineProtocol
+        The pipeline instance
     """
 
-    def __init__(self, nlp: Language):
+    def __init__(self, nlp: PipelineProtocol):
         self.nlp = nlp
 
     def _preprocess_data(self, corpus: Iterable[Doc]) -> pd.DataFrame:
@@ -520,7 +519,9 @@ class EndLinesModel:
         return outputs
 
     def _fit_encoder_2S(self, S1: pd.Series, S2: pd.Series) -> OneHotEncoder:
-        """Fit a one hot encoder with 2 Series. It concatenates the series and after it fits.
+        """
+        Fit a one hot encoder with 2 Series.
+        It concatenates the series and after it fits.
 
         Parameters
         ----------
@@ -685,7 +686,9 @@ class EndLinesModel:
 
     @classmethod
     def _get_attributes(cls, doc: Doc, i=0):
-        """Function to get the attributes of tokens of a spacy doc in a pd.DataFrame format.
+        """
+        Function to get the attributes of tokens
+        of a spacy doc in a pd.DataFrame format.
 
         Parameters
         ----------

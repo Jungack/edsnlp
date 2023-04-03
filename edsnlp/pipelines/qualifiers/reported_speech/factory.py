@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from spacy.language import Language
-
-from edsnlp.pipelines.qualifiers.reported_speech import ReportedSpeech
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from .reported_speech import ReportedSpeech
 
 DEFAULT_CONFIG = dict(
     pseudo=None,
@@ -30,13 +29,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["span._.reported_speech"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.reported_speech",
     default_config=DEFAULT_CONFIG,
     assigns=["span._.reported_speech"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     attr: str,
     pseudo: Optional[List[str]],

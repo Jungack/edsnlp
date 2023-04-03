@@ -1,11 +1,10 @@
+from spacy.tokens import Doc
 from typing import Optional
 
-from spacy.tokens import Doc
-
 from .accents import Accents
-from .lowercase import remove_lowercase
 from .pollution import Pollution
 from .quotes import Quotes
+from .remove_lowercase import RemoveLowercase
 from .spaces import Spaces
 
 
@@ -14,35 +13,36 @@ class Normalizer(object):
     Normalisation pipeline. Modifies the `NORM` attribute,
     acting on five dimensions :
 
-    - `lowercase`: using the default `NORM`
+    - `remove_lowercase`: using the default `NORM`
     - `accents`: deterministic and fixed-length normalisation of accents.
     - `quotes`: deterministic and fixed-length normalisation of quotation marks.
     - `spaces`: "removal" of spaces tokens (via the tag_ attribute).
     - `pollution`: "removal" of pollutions (via the tag_ attribute).
-
-    Parameters
-    ----------
-    lowercase : bool
-        Whether to remove case.
-    accents : Optional[Accents]
-        Optional `Accents` object.
-    quotes : Optional[Quotes]
-        Optional `Quotes` object.
-    spaces : Optional[Spaces]
-        Optional `Spaces` object.
-    pollution : Optional[Pollution]
-        Optional `Pollution` object.
     """
 
     def __init__(
         self,
-        lowercase: bool,
+        remove_lowercase: Optional[RemoveLowercase],
         accents: Optional[Accents],
         quotes: Optional[Quotes],
         spaces: Optional[Spaces],
         pollution: Optional[Pollution],
     ):
-        self.lowercase = lowercase
+        """
+        Parameters
+        ----------
+        remove_lowercase : bool
+            Whether to remove case.
+        accents : Optional[Accents]
+            Optional `Accents` object.
+        quotes : Optional[Quotes]
+            Optional `Quotes` object.
+        spaces : Optional[Spaces]
+            Optional `Spaces` object.
+        pollution : Optional[Pollution]
+            Optional `Pollution` object.
+        """
+        self.remove_lowercase = remove_lowercase
         self.accents = accents
         self.quotes = quotes
         self.spaces = spaces
@@ -62,8 +62,8 @@ class Normalizer(object):
         Doc
             Doc object with `NORM` attribute modified
         """
-        if not self.lowercase:
-            remove_lowercase(doc)
+        if self.remove_lowercase is not None:
+            self.remove_lowercase(doc)
         if self.accents is not None:
             self.accents(doc)
         if self.quotes is not None:

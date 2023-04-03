@@ -1,11 +1,10 @@
 import re
 from typing import Any, Callable, List, Union
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.pipelines.ner.scores import Score
-from edsnlp.pipelines.ner.scores.emergency.priority import patterns
 from edsnlp.utils.deprecation import deprecated_factory
+from . import patterns
 
 DEFAULT_CONFIG = dict(
     regex=patterns.regex,
@@ -24,13 +23,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.emergency.priority",
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str = "emergency.priority",
     regex: List[str] = patterns.regex,
     value_extract: str = patterns.value_extract,
@@ -48,7 +47,7 @@ def create_component(
 
     Parameters
     ----------
-    nlp: Language
+    nlp: PipelineProtocol
         The spaCy Language object
     name: str
         The name of the component

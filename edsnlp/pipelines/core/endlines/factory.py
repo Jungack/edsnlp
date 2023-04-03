@@ -1,16 +1,14 @@
 from typing import Optional
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
-
 from .endlines import EndLines
 
 
 @deprecated_factory("endlines", "eds.endlines")
-@Language.factory("eds.endlines")
+@registry.factory.register("eds.endlines")
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     model_path: Optional[str],
 ):

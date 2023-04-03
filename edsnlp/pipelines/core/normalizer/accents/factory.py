@@ -1,9 +1,7 @@
 from typing import List, Optional, Tuple
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
-
 from .accents import Accents
 
 DEFAULT_CONFIG = dict(
@@ -14,13 +12,13 @@ DEFAULT_CONFIG = dict(
 @deprecated_factory(
     "accents", "eds.accents", default_config=DEFAULT_CONFIG, assigns=["token.norm"]
 )
-@Language.factory(
+@registry.factory.register(
     "eds.accents",
     default_config=DEFAULT_CONFIG,
     assigns=["token.norm"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     accents: Optional[List[Tuple[str, str]]],
 ):

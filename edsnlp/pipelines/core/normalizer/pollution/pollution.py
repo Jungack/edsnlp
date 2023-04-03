@@ -1,13 +1,11 @@
 import re
+from spacy.tokens import Doc, Span
 from typing import Dict, List, Optional, Union
 
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.regex import RegexMatcher
 from edsnlp.pipelines.base import BaseComponent
 from edsnlp.utils.filter import filter_spans
-
 from . import patterns
 
 
@@ -25,8 +23,8 @@ class Pollution(BaseComponent):
 
     Parameters
     ----------
-    nlp : Language
-        Language pipeline object
+    nlp : PipelineProtocol
+        The pipeline instance
     pollution : Dict[str, Union[str, List[str]]]
         Dictionary containing regular expressions of pollution.
     """
@@ -34,7 +32,7 @@ class Pollution(BaseComponent):
     # noinspection PyProtectedMember
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         pollution: Optional[Dict[str, Union[bool, str, List[str]]]],
     ):
 

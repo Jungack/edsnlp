@@ -1,17 +1,17 @@
+from collections import defaultdict
+
 import abc
 import re
+import regex
 import unicodedata
-from collections import defaultdict
 from enum import Enum
 from functools import lru_cache
 from itertools import repeat
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
-
-import regex
-import spacy
 from spacy.tokens import Doc, Span
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 from typing_extensions import NotRequired, TypedDict
 
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.phrase import EDSPhraseMatcher
 from edsnlp.matchers.regex import RegexMatcher
 from edsnlp.matchers.utils import get_text
@@ -260,7 +260,7 @@ class RangeMeasurement(Measurement):
 class MeasurementsMatcher:
     def __init__(
         self,
-        nlp: spacy.Language,
+        nlp: PipelineProtocol,
         measurements: Optional[
             Union[
                 List[Union[str, MeasureConfig]],
@@ -295,8 +295,8 @@ class MeasurementsMatcher:
 
         Parameters
         ----------
-        nlp : Language
-            The SpaCy object.
+        nlp : PipelineProtocol
+            The pipeline instance
         measurements : Optional[Union[List[Union[str, MeasureConfig]],Dict[str, MeasureConfig]]]
             A mapping from measure names to MeasureConfig
             Each measure's configuration has the following shape:

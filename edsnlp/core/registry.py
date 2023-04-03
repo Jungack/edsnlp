@@ -3,7 +3,6 @@ import inspect
 import spacy
 from dataclasses import dataclass
 from functools import wraps
-from spacy import Language
 from spacy.pipe_analysis import validate_attrs
 from typing import Callable, Optional, Any, Sequence, Dict, Iterable, List
 from weakref import WeakKeyDictionary
@@ -136,7 +135,7 @@ class FactoryRegistry(Registry):
         spacy_namespace = ["spacy", "internal_factories", name]
         if catalogue.check_exists(*spacy_namespace):
             func = catalogue._get(spacy_namespace)
-            meta = Language.get_factory_meta(name)
+            meta = spacy.Language.get_factory_meta(name)
 
             def curried(**kwargs):
                 return CurriedFactory(

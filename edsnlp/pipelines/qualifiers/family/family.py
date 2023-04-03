@@ -1,14 +1,12 @@
+from loguru import logger
+from spacy.tokens import Doc, Span, Token
 from typing import List, Optional
 
-from loguru import logger
-from spacy.language import Language
-from spacy.tokens import Doc, Span, Token
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.pipelines.qualifiers.base import Qualifier
 from edsnlp.pipelines.terminations import termination
 from edsnlp.utils.filter import consume_spans, filter_spans, get_spans
 from edsnlp.utils.inclusion import check_inclusion
-
 from .patterns import family
 
 
@@ -20,8 +18,8 @@ class FamilyContext(Qualifier):
 
     Parameters
     ----------
-    nlp : Language
-        spaCy nlp pipeline to use for matching.
+    nlp : PipelineProtocol
+        The pipeline instance
     family : Optional[List[str]]
         List of terms indicating family reference.
     terminations : Optional[List[str]]
@@ -48,7 +46,7 @@ class FamilyContext(Qualifier):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         attr: str,
         family: Optional[List[str]],
         termination: Optional[List[str]],

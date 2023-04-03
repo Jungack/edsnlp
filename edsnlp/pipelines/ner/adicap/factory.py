@@ -1,7 +1,6 @@
 from typing import List, Optional, Union
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from .adicap import Adicap
 from .patterns import adicap_prefix, base_code
 
@@ -13,13 +12,13 @@ DEFAULT_CONFIG = dict(
 )
 
 
-@Language.factory(
+@registry.factory.register(
     "eds.adicap",
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str = "eds.adicap",
     pattern: Optional[Union[List[str], str]] = base_code,
     prefix: Optional[Union[List[str], str]] = adicap_prefix,
@@ -31,8 +30,8 @@ def create_component(
 
     Parameters
     ----------
-    nlp: Language
-        spaCy `Language` object.
+    nlp: PipelineProtocol
+        The pipeline instance
     name: str
         The name of the pipe
     pattern: Optional[Union[List[str], str]]

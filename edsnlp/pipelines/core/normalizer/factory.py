@@ -1,14 +1,12 @@
 from typing import Any, Dict, Union
 
-from spacy import registry
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
-
 from .accents.factory import DEFAULT_CONFIG as accents_config
 from .normalizer import Normalizer
 from .pollution.factory import DEFAULT_CONFIG as pollution_config
 from .quotes.factory import DEFAULT_CONFIG as quotes_config
+from .remove_lowercase.remove_lowercase import DEFAULT_CONFIG as remove_lowercase_config
 from .spaces.factory import DEFAULT_CONFIG as spaces_config
 
 DEFAULT_CONFIG = dict(
@@ -26,14 +24,14 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["token.norm", "token.tag"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.normalizer", default_config=DEFAULT_CONFIG, assigns=["token.norm", "token.tag"]
 )
 def create_component(
-    nlp: Language,
-    name: str = "eds.normalizer",
+    nlp: PipelineProtocol,
+    name: str,
     accents: Union[bool, Dict[str, Any]] = True,
-    lowercase: Union[bool, Dict[str, Any]] = True,
+    remove_lowercase: Union[bool, Dict[str, Any]] = True,
     quotes: Union[bool, Dict[str, Any]] = True,
     spaces: Union[bool, Dict[str, Any]] = True,
     pollution: Union[bool, Dict[str, Any]] = True,
@@ -42,7 +40,7 @@ def create_component(
     Normalisation pipeline. Modifies the `NORM` attribute,
     acting on five dimensions :
 
-    - `lowercase`: using the default `NORM`
+    - `remove_lowercase`: using the `TEXT` attribute as a base for `NORM`.
     - `accents`: deterministic and fixed-length normalisation of accents.
     - `quotes`: deterministic and fixed-length normalisation of quotation marks.
     - `spaces`: "removal" of spaces tokens (via the tag_ attribute).
@@ -50,7 +48,7 @@ def create_component(
 
     Parameters
     ----------
-    lowercase : bool
+    remove_lowercase : Union[bool, Dict[str, Any]]
         Whether to remove case.
     accents : Union[bool, Dict[str, Any]]
         `Accents` configuration object
@@ -61,6 +59,14 @@ def create_component(
     pollution : Union[bool, Dict[str, Any]]
         Optional `Pollution` configuration object.
     """
+
+    if remove_lowercase:
+        config = dict(**remove_lowercase_config)
+        if isinstance(remove_lowercase, dict):
+            config.update(remove_lowercase)
+        remove_lowercase = registry.get("factories", "eds.remove_lowercase")(
+            nlp, "eds.remove_lowercase", **config
+        )
 
     if accents:
         config = dict(**accents_config)
@@ -89,7 +95,7 @@ def create_component(
         )
 
     normalizer = Normalizer(
-        lowercase=lowercase,
+        remove_lowercase=remove_lowercase or None,
         accents=accents or None,
         quotes=quotes or None,
         pollution=pollution or None,

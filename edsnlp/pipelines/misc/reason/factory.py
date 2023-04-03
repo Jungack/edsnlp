@@ -1,9 +1,8 @@
 from typing import Dict, List, Optional, Union
 
-from spacy.language import Language
-
-from edsnlp.pipelines.misc.reason import Reason
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from .reason import Reason
 
 DEFAULT_CONFIG = dict(
     reasons=None,
@@ -14,9 +13,9 @@ DEFAULT_CONFIG = dict(
 
 
 @deprecated_factory("reason", "eds.reason", default_config=DEFAULT_CONFIG)
-@Language.factory("eds.reason", default_config=DEFAULT_CONFIG)
+@registry.factory.register("eds.reason", default_config=DEFAULT_CONFIG)
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     reasons: Optional[Dict[str, Union[List[str], str]]],
     attr: str,

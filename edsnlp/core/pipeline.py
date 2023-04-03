@@ -30,6 +30,7 @@ from typing import (
     Sequence,
     List,
     Type,
+    Protocol,
 )
 
 from confit import Config
@@ -55,6 +56,24 @@ class CacheEnum(str, Enum):
 
 
 Pipe = Callable[[Doc], Doc]
+
+
+class PipelineProtocol(Protocol):
+    pipe_names: List[str]
+    vocab: Vocab
+    config: Config
+    meta: Dict[str, Any]
+    lang: str
+    tokenizer: Tokenizer
+
+    def __call__(self, text: str) -> Doc:
+        ...
+
+    def pipe(self, texts: Iterable[str], batch_size: int) -> Iterable[Doc]:
+        ...
+
+    def get_pipe_meta(self, name):
+        ...
 
 
 class Pipeline:

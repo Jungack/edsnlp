@@ -1,20 +1,19 @@
-import re
 from collections import defaultdict
+
+import re
 from functools import lru_cache
+from loguru import logger
 from operator import attrgetter
+from spacy.tokens import Doc, Span
 from typing import Any, Dict, List, Tuple, Union
 
-from loguru import logger
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.phrase import EDSPhraseMatcher
 from edsnlp.matchers.regex import RegexMatcher, create_span
 from edsnlp.matchers.utils import get_text
 from edsnlp.pipelines.base import BaseComponent
 from edsnlp.utils.filter import filter_spans
 from edsnlp.utils.lists import flatten
-
 from . import models
 
 
@@ -38,8 +37,8 @@ class ContextualMatcher(BaseComponent):
 
     Parameters
     ----------
-    nlp : Language
-        spaCy `Language` object.
+    nlp : PipelineProtocol
+        The pipeline instance
     name : str
         The name of the pipe
     patterns: Union[Dict[str, Any], List[Dict[str, Any]]]
@@ -64,7 +63,7 @@ class ContextualMatcher(BaseComponent):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         name: str,
         patterns: Union[Dict[str, Any], List[Dict[str, Any]]],
         assign_as_span: bool = False,

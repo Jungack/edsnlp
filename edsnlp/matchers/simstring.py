@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pysimstring.simstring as simstring
-from spacy import Language, Vocab
+from edsnlp.core import PipelineProtocol
+from spacy.vocab import Vocab
 from spacy.tokens import Doc, Span
 from tqdm import tqdm
 
@@ -110,14 +111,17 @@ class SimstringMatcher:
         self.syn2cuis = None
 
     def build_patterns(
-        self, nlp: Language, terms: Dict[str, Iterable[str]], progress: bool = False
+        self,
+        nlp: PipelineProtocol,
+        terms: Dict[str, Iterable[str]],
+        progress: bool = False,
     ):
         """
         Build patterns and adds them for matching.
 
         Parameters
         ----------
-        nlp : Language
+        nlp : PipelineProtocol
             The instance of the spaCy language class.
         terms : Patterns
             Dictionary of label/terms, or label/dictionary of terms/attribute.

@@ -1,7 +1,6 @@
 from typing import List, Optional, Union
 
-from spacy.language import Language
-
+from edsnlp.core import PipelineProtocol, registry
 from .tnm import TNM
 
 DEFAULT_CONFIG = dict(
@@ -10,13 +9,13 @@ DEFAULT_CONFIG = dict(
 )
 
 
-@Language.factory(
+@registry.factory.register(
     "eds.TNM",
     default_config=DEFAULT_CONFIG,
     assigns=["doc.ents", "doc.spans"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     pattern: Optional[Union[List[str], str]],
     attr: str,

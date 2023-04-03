@@ -1,17 +1,17 @@
-from spacy.language import Language
+from edsnlp.core import PipelineProtocol, registry
 
 from .spaces import Spaces
 
 DEFAULT_CONFIG = dict()
 
 
-@Language.factory(
+@registry.factory.register(
     "eds.spaces",
     default_config=DEFAULT_CONFIG,
     assigns=["token.tag"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     newline: bool = True,
 ):

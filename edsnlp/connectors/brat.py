@@ -1,17 +1,18 @@
+from collections import defaultdict
+
 import glob
 import os
-import re
-from collections import defaultdict
-from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
-
 import pandas as pd
+import re
 from joblib import Parallel, delayed
 from loguru import logger
-from spacy import Language
+from pathlib import Path
 from spacy.tokens import Doc, Span
 from spacy.util import filter_spans
 from tqdm import tqdm
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
+
+from edsnlp.core import PipelineProtocol
 
 REGEX_ENTITY = re.compile(r"^(T\d+)\t([^\s]+)([^\t]+)\t(.*)$")
 REGEX_NOTE = re.compile(r"^(#\d+)\tAnnotatorNotes ([^\t]+)\t(.*)$")
@@ -316,7 +317,7 @@ class BratConnector(object):
         Parameters
         ----------
         nlp:
-            A spaCy pipeline.
+            The pipeline instance
 
         Returns
         -------
@@ -352,14 +353,14 @@ class BratConnector(object):
 
         return annotations
 
-    def brat2docs(self, nlp: Language, run_pipe=False) -> List[Doc]:
+    def brat2docs(self, nlp: PipelineProtocol, run_pipe=False) -> List[Doc]:
         """
         Transforms a BRAT folder to a list of spaCy documents.
 
         Parameters
         ----------
-        nlp: Language
-            A spaCy pipeline.
+        nlp: PipelineProtocol
+            The pipeline instance
         run_pipe: bool
             Should the full spaCy pipeline be run on the documents, or just the
             tokenization (defaults to False ie only tokenization)

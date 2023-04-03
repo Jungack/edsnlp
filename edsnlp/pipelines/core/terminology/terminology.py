@@ -1,10 +1,9 @@
 from enum import Enum
 from itertools import chain
+from spacy.tokens import Doc, Span
 from typing import List, Optional
 
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.phrase import EDSPhraseMatcher
 from edsnlp.matchers.regex import RegexMatcher
 from edsnlp.matchers.simstring import SimstringMatcher
@@ -28,8 +27,8 @@ class TerminologyMatcher(BaseComponent):
 
     Parameters
     ----------
-    nlp : Language
-        The spaCy object.
+    nlp : PipelineProtocol
+        The pipeline instance
     label : str
         Top-level label
     terms : Optional[Patterns]
@@ -53,7 +52,7 @@ class TerminologyMatcher(BaseComponent):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         label: str,
         terms: Optional[Patterns],
         regex: Optional[Patterns],

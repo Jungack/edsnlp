@@ -1,16 +1,14 @@
 """`eds.dates` pipeline."""
 
 from itertools import chain
+from loguru import logger
+from spacy.tokens import Doc, Span
 from typing import Dict, List, Optional, Tuple, Union
 
-from loguru import logger
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.regex import RegexMatcher
 from edsnlp.pipelines.base import BaseComponent
 from edsnlp.utils.filter import filter_spans
-
 from . import patterns
 from .models import AbsoluteDate, Duration, Mode, Period, RelativeDate
 
@@ -28,8 +26,8 @@ class Dates(BaseComponent):
 
     Parameters
     ----------
-    nlp : spacy.language.Language
-        Language pipeline object
+    nlp : PipelineProtocol
+        The pipeline instance
     absolute : Union[List[str], str]
         List of regular expressions for absolute dates.
     relative : Union[List[str], str]
@@ -58,7 +56,7 @@ class Dates(BaseComponent):
     # noinspection PyProtectedMember
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         absolute: Optional[List[str]],
         relative: Optional[List[str]],
         duration: Optional[List[str]],

@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from spacy.language import Language
-
-from edsnlp.pipelines.qualifiers.hypothesis import Hypothesis
+from edsnlp.core import PipelineProtocol, registry
 from edsnlp.utils.deprecation import deprecated_factory
+from .hypothesis import Hypothesis
 
 DEFAULT_CONFIG = dict(
     pseudo=None,
@@ -25,13 +24,13 @@ DEFAULT_CONFIG = dict(
     default_config=DEFAULT_CONFIG,
     assigns=["span._.hypothesis"],
 )
-@Language.factory(
+@registry.factory.register(
     "eds.hypothesis",
     default_config=DEFAULT_CONFIG,
     assigns=["span._.hypothesis"],
 )
 def create_component(
-    nlp: Language,
+    nlp: PipelineProtocol,
     name: str,
     attr: str,
     pseudo: Optional[List[str]],

@@ -4,9 +4,6 @@ from enum import Enum
 from itertools import islice
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, List, Optional, Union
-
-import spacy
 from spacy.errors import Errors, Warnings
 from spacy.schemas import ConfigSchemaTraining
 from spacy.tokens import Doc, DocBin
@@ -14,12 +11,11 @@ from spacy.training.loop import train as train_loop
 from spacy.util import get_sourced_components, logger, registry, resolve_dot_names
 from thinc.api import ConfigValidationError, fix_random_seed, set_gpu_allocator
 from thinc.config import Config
+from typing import List, Optional, Union
 
 from edsnlp.connectors import BratConnector
+from edsnlp.core import PipelineProtocol
 from edsnlp.utils.merge_configs import merge_configs
-
-if TYPE_CHECKING:
-    from spacy.language import Language  # noqa: F401
 
 __all__ = ["Config", "train", "DEFAULT_TRAIN_CONFIG"]
 
@@ -113,7 +109,7 @@ def make_spacy_corpus_config(
     train_data: Union[str, List[Doc]],
     dev_data: Union[str, List[Doc], int, float],
     data_format: Union[Optional[DataFormat], str] = None,
-    nlp: Optional[spacy.Language] = None,
+    nlp: Optional[PipelineProtocol] = None,
     seed: int = 0,
     reader: str = "spacy.Corpus.v1",
 ):
@@ -135,8 +131,8 @@ def make_spacy_corpus_config(
             - the fraction of documents to take from the training data
     data_format: Optional[DataFormat]
         Optional data format to determine how we should load the documents from the disk
-    nlp: Optional[spacy.Language]
-        Optional spacy model to load documents from non-spacy formats (like brat)
+    nlp: Optional[PipelineProtocol]
+        Optional pipeline to load documents from non-spacy formats (like brat)
     seed: int
         The seed if we need to shuffle the data when splitting the dataset
     reader: str
@@ -221,7 +217,7 @@ def make_spacy_corpus_config(
 
 
 def train(
-    nlp: spacy.Language,
+    nlp: PipelineProtocol,
     output_path: Union[Path, str],
     config: Union[Config, dict],
     use_gpu: int = -1,
@@ -233,8 +229,8 @@ def train(
 
     Parameters
     ----------
-    nlp: spacy.Language
-        Spacy model to train
+    nlp: PipelineProtocol
+        The pipeline instance
     output_path: Union[Path,str]
         Path to save the model
     config: Union[Config,dict]

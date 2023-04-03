@@ -1,9 +1,8 @@
 from enum import Enum
+from spacy.tokens import Doc, Span
 from typing import Any, Dict, List, Optional
 
-from spacy.language import Language
-from spacy.tokens import Doc, Span
-
+from edsnlp.core import PipelineProtocol
 from edsnlp.matchers.phrase import EDSPhraseMatcher
 from edsnlp.matchers.regex import RegexMatcher
 from edsnlp.matchers.simstring import SimstringMatcher
@@ -23,8 +22,8 @@ class GenericMatcher(BaseComponent):
 
     Parameters
     ----------
-    nlp : Language
-        The spaCy object.
+    nlp : PipelineProtocol
+        The pipeline instance
     terms : Optional[Patterns]
         A dictionary of terms.
     regex : Optional[Patterns]
@@ -49,7 +48,7 @@ class GenericMatcher(BaseComponent):
 
     def __init__(
         self,
-        nlp: Language,
+        nlp: PipelineProtocol,
         terms: Optional[Patterns],
         regex: Optional[Patterns],
         attr: str,
