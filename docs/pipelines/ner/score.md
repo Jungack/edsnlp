@@ -35,7 +35,7 @@ Each extraction exposes 2 extensions:
 ent = doc.ents[0]
 
 ent._.score_name
-# Out: 'eds.charlson'
+# Out: 'charlson'
 
 ent._.score_value
 # Out: 7
@@ -66,7 +66,7 @@ Each extraction exposes 3 extensions:
 ent = doc.ents[0]
 
 ent._.score_name
-# Out: 'eds.SOFA'
+# Out: 'sofa'
 
 ent._.score_value
 # Out: 12

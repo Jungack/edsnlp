@@ -7,7 +7,6 @@ from edsnlp.pipelines.core.contextual_matcher import ContextualMatcher
 from edsnlp.utils.filter import filter_spans
 from edsnlp.utils.resources import get_adicap_dict
 
-from . import patterns
 from .models import AdicapCode
 
 
@@ -15,11 +14,6 @@ class Adicap(ContextualMatcher):
     def __init__(self, nlp, pattern, attr, prefix, window):
 
         self.nlp = nlp
-        if pattern is None:
-            pattern = patterns.base_code
-
-        if prefix is None:
-            prefix = patterns.adicap_prefix
 
         adicap_pattern = dict(
             source="adicap",

@@ -160,7 +160,7 @@ def test_contextual(blank_nlp, params, example):
     include_assigned, replace_entity, reduce_mode_stage, reduce_mode_metastase = params
 
     blank_nlp.add_pipe(
-        "normalizer",
+        "eds.normalizer",
         config=dict(lowercase=True, accents=True, quotes=True, pollution=False),
     )
 

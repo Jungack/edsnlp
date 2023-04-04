@@ -397,7 +397,8 @@ class ContextualMatcher(BaseComponent):
 
     def process_one(self, span):
         filtered = self.filter_one(span)
-        yield from self.assign_one(filtered)
+        assigned = self.assign_one(filtered)
+        yield from assigned
 
     def process(self, doc: Doc) -> List[Span]:
         """

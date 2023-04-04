@@ -46,7 +46,7 @@ def create_component(
     accents: Union[bool, Dict[str, Any]] = True,
     quotes: Union[bool, Dict[str, Any]] = True,
     spaces: Union[bool, Dict[str, Any]] = True,
-    pollution: Union[bool, Dict[str, Any]] = True,
+    pollution: Union[bool, Dict[str, Any], Dict[str, bool]] = True,
 ) -> Normalizer:
     """
     Normalisation pipeline. Modifies the `NORM` attribute,
@@ -94,10 +94,12 @@ def create_component(
             config.update(spaces)
         spaces = create_spaces(nlp=nlp, name="eds.spaces", **config)
 
+    if isinstance(pollution, dict) and pollution.get("pollution"):
+        pollution = pollution["pollution"]
     if pollution:
         config = dict(**pollution_config["pollution"])
         if isinstance(pollution, dict):
-            config.update(pollution["pollution"])
+            config.update(pollution)
         pollution = create_pollution(nlp=nlp, name="eds.pollution", pollution=config)
 
     normalizer = Normalizer(
