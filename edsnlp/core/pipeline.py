@@ -117,6 +117,7 @@ class Pipeline:
         self._path: Optional[Path] = None
         self.meta = dict(meta) if meta is not None else {}
         self.lang: str = lang
+        self._cache: Optional[Dict] = None
 
     @property
     def pipeline(self) -> List[Tuple[str, Pipe]]:
@@ -142,6 +143,25 @@ class Pipeline:
         for n, pipe in self.pipeline:
             if n == name:
                 return pipe
+        raise ValueError(f"Pipe {name} not found in pipeline.")
+
+    def has_pipe(self, name: str) -> bool:
+        """
+        Check if a component exists in the pipeline.
+
+        Parameters
+        ----------
+        name: str
+            The name of the component to check.
+
+        Returns
+        -------
+        bool
+        """
+        for n, _ in self.pipeline:
+            if n == name:
+                return True
+        return False
 
     def create_pipe(
         self,
@@ -171,7 +191,7 @@ class Pipeline:
                 **(config if config is not None else {}),
             }
         ).resolve()
-        pipe = curried_factory.instantiate(nlp=self)
+        pipe = curried_factory.instantiate(nlp=self, path=(name,))
         return pipe
 
     def add_pipe(
@@ -204,9 +224,9 @@ class Pipeline:
             The component that was added to the pipeline.
         """
         if isinstance(factory, str):
-            pipe = self.create_pipe(factory, name, config)
             if name is None:
                 name = factory
+            pipe = self.create_pipe(factory, name, config)
         else:
             if config is not None:
                 raise ValueError(
@@ -271,9 +291,7 @@ class Pipeline:
         -------
         Doc
         """
-        if isinstance(text, Doc):
-            return text
-        return self.make_doc(text)
+        return text if isinstance(text, Doc) else self.make_doc(text)
 
     def __call__(self, text: Union[str, Doc]) -> Doc:
         """
@@ -361,14 +379,9 @@ class Pipeline:
         """
         Enable caching for all (trainable) components in the pipeline
         """
-        did_cache_before: List[Tuple[Pipe, bool]] = []
-        for name, component in self.pipeline:
-            if hasattr(component, "enable_cache"):
-                did_cache_before.append((component, component.enable_cache(True)))
+        self._cache = {}
         yield
-        for component, do_cache in did_cache_before:
-            component.enable_cache(do_cache)  # type: ignore
-            component.reset_cache()  # type: ignore
+        self._cache = None
 
     def torch_components(
         self, disable: Sequence[str] = ()
@@ -501,13 +514,13 @@ class Pipeline:
         Pydantic validator, used in the `validate_arguments` decorated functions
         """
         if isinstance(v, dict):
-            try:
-                return cls.from_config(v)
-            except:
-                import traceback
-
-                traceback.print_exc()
-                raise
+            #            try:
+            return cls.from_config(v)
+        #            except:
+        #                import traceback
+        #
+        #                traceback.print_exc()
+        #                raise
         return v
 
     def preprocess(self, doc: Doc, supervision: bool = False):
@@ -565,7 +578,7 @@ class Pipeline:
             functools.partial(self.preprocess, supervision=supervision), docs
         )
         if compress:
-            return batch_compress_dict(preprocessed)
+            preprocessed = batch_compress_dict(preprocessed)
         return preprocessed
 
     def collate(
@@ -757,7 +770,7 @@ class Pipeline:
 
         if os.path.exists(path) and not os.path.exists(path / "config.cfg"):
             raise Exception(
-                "The directory already exists and doesn't seem to be a"
+                "The directory already exists and doesn't appear to be a"
                 "saved pipeline. Please erase it manually or choose a "
                 "different directory."
             )

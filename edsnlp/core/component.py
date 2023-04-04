@@ -1,4 +1,3 @@
-import contextlib
 import torch
 import typing
 from abc import ABCMeta
@@ -10,12 +9,12 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    Optional,
     Sequence,
     Tuple,
     Union,
 )
 
+from edsnlp import Pipeline
 from edsnlp.utils.collections import batch_compress_dict, batchify, decompress_dict
 
 BatchInput = typing.TypeVar("BatchInput", bound=Dict[str, Any])
@@ -40,13 +39,13 @@ def hash_batch(batch):
 def cached_preprocess(fn):
     @wraps(fn)
     def wrapped(self: "TorchComponent", doc: Doc):
-        if not self._do_cache:
+        if self.nlp._cache is None:
             return fn(self, doc)
-        cache_id = hash(id(doc))
-        if cache_id in self._preprocess_cache:
-            return self._preprocess_cache[cache_id]
+        cache_id = hash((id(self), "preprocess", id(doc)))
+        if cache_id in self.nlp._cache:
+            return self.nlp._cache[cache_id]
         res = fn(self, doc)
-        self._preprocess_cache[cache_id] = res
+        self.nlp._cache[cache_id] = res
         return res
 
     return wrapped
@@ -55,13 +54,13 @@ def cached_preprocess(fn):
 def cached_preprocess_supervised(fn):
     @wraps(fn)
     def wrapped(self: "TorchComponent", doc: Doc):
-        if not self._do_cache:
+        if self.nlp._cache is None:
             return fn(self, doc)
-        cache_id = hash(id(doc))
-        if cache_id in self._preprocess_supervised_cache:
-            return self._preprocess_supervised_cache[cache_id]
+        cache_id = hash((id(self), "preprocess_supervised", id(doc)))
+        if cache_id in self.nlp._cache.setdefault(self, {}):
+            return self.nlp._cache[cache_id]
         res = fn(self, doc)
-        self._preprocess_supervised_cache[cache_id] = res
+        self.nlp._cache[cache_id] = res
         return res
 
     return wrapped
@@ -72,13 +71,13 @@ def cached_collate(fn):
 
     @wraps(fn)
     def wrapped(self: "TorchComponent", batch: Dict, device: torch.device):
-        cache_id = hash_batch(batch)
-        if not self._do_cache or cache_id is None:
+        cache_id = hash((id(self), "collate", hash_batch(batch)))
+        if self.nlp._cache is None or cache_id is None:
             return fn(self, batch, device)
-        if cache_id in self._collate_cache:
-            return self._collate_cache[cache_id]
+        if cache_id in self.nlp._cache:
+            return self.nlp._cache[cache_id]
         res = fn(self, batch, device)
-        self._collate_cache[cache_id] = res
+        self.nlp._cache[cache_id] = res
         res["cache_id"] = cache_id
         return res
 
@@ -89,13 +88,13 @@ def cached_forward(fn):
     @wraps(fn)
     def wrapped(self: "TorchComponent", batch):
         # Convert args and kwargs to a dictionary matching fn signature
-        cache_id = hash_batch(batch)
-        if not self._do_cache or cache_id is None:
+        cache_id = hash((id(self), "collate", hash_batch(batch)))
+        if self.nlp._cache is None or cache_id is None:
             return fn(self, batch)
-        if cache_id in self._forward_cache:
-            return self._forward_cache[cache_id]
+        if cache_id in self.nlp._cache:
+            return self.nlp._cache[cache_id]
         res = fn(self, batch)
-        self._forward_cache[cache_id] = res
+        self.nlp._cache[cache_id] = res
         return res
 
     return wrapped
@@ -132,78 +131,18 @@ class TorchComponent(
     for components that share a common subcomponent.
     """
 
-    def __init__(self):
+    def __init__(self, nlp: Pipeline, name: str):
         super().__init__()
+        self.nlp = nlp
         self.cfg = {}
         self._preprocess_cache = {}
         self._preprocess_supervised_cache = {}
         self._collate_cache = {}
         self._forward_cache = {}
-        self._do_cache = False
-
-    @contextlib.contextmanager
-    def cache(self):
-        did_cache_before = self.enable_cache(True)
-        yield
-        self.enable_cache(did_cache_before)
-
-    def post_init(self, gold_data: Iterable[Doc], **kwargs):
-        """
-        Initialize the missing properties of the module, such as its vocabulary,
-        using the gold data and the provided keyword arguments.
-
-        Parameters
-        ----------
-        gold_data: Iterable[Doc]
-            Gold data to use for initialization
-        kwargs: Any
-            Additional keyword arguments to use for initialization
-        """
-        for name, value in kwargs.items():
-            if value is None:
-                continue
-            current_value = getattr(self, name)
-            if current_value is not None and current_value != value:
-                raise ValueError(
-                    "Cannot initialize module with different values for "
-                    "attribute '{}': {} != {}".format(name, current_value, value)
-                )
-            setattr(self, name, value)
-
-    def enable_cache(self, do_cache):
-        saved = self._do_cache
-        self._do_cache = do_cache
-
-        for module in self.modules():
-            if isinstance(module, TorchComponent) and module is not self:
-                module.enable_cache(do_cache)
-
-        return saved
 
     @property
     def device(self):
         return next((p.device for p in self.parameters()), torch.device("cpu"))
-
-    def reset_cache(self, cache: Optional[CacheEnum] = None):
-        def clear(module):
-            try:
-                assert cache is None or cache in (
-                    CacheEnum.preprocess,
-                    CacheEnum.collate,
-                    CacheEnum.forward,
-                )
-                if cache is None or cache == CacheEnum.preprocess:
-                    module._preprocess_cache.clear()
-                if cache is None or cache == CacheEnum.preprocess:
-                    module._preprocess_supervised.clear()
-                if cache is None or cache == CacheEnum.collate:
-                    module._collate_cache.clear()
-                if cache is None or cache == CacheEnum.forward:
-                    module._forward_cache.clear()
-            except AttributeError:
-                pass
-
-        self.apply(clear)
 
     def preprocess(self, doc: Doc) -> Dict[str, Any]:
         """
@@ -221,7 +160,7 @@ class TorchComponent(
             Dictionary (optionally nested) containing the features extracted from
             the document.
         """
-        return {}
+        raise NotImplementedError()
 
     def collate(
         self, batch: Dict[str, Sequence[Any]], device: torch.device
@@ -242,7 +181,7 @@ class TorchComponent(
         BatchInput
             Dictionary (optionally nested) containing the collated tensors
         """
-        return {}
+        raise NotImplementedError()
 
     def forward(self, batch: BatchInput) -> BatchOutput:
         """
@@ -267,7 +206,11 @@ class TorchComponent(
         """
         return torch.nn.Module.__call__(self, *args, **kwargs)
 
-    def make_batch(self, docs: Sequence[Doc]) -> Dict[str, Sequence[Any]]:
+    def make_batch(
+        self,
+        docs: Sequence[Doc],
+        supervision: bool = False,
+    ) -> Dict[str, Sequence[Any]]:
         """
         Convenience method to preprocess a batch of documents and collate them
         Features corresponding to the same path are grouped together in a list,
@@ -277,17 +220,18 @@ class TorchComponent(
         ----------
         docs: Sequence[Doc]
             Batch of documents
+        supervision: bool
+            Whether to extract supervision features or not
 
         Returns
         -------
         Dict[str, Sequence[Any]]
         """
-        batch = decompress_dict(
-            list(
-                batch_compress_dict([{self.name: self.preprocess(doc)} for doc in docs])
-            )
-        )
-        return batch
+        batch = [
+            (self.preprocess_supervised(doc) if supervision else self.preprocess(doc))
+            for doc in docs
+        ]
+        return decompress_dict(list(batch_compress_dict(batch)))
 
     def batch_process(self, docs: Sequence[Doc]) -> Sequence[Doc]:
         """
@@ -307,7 +251,7 @@ class TorchComponent(
         """
         with torch.no_grad():
             batch = self.make_batch(docs)
-            inputs = self.collate(batch[self.name], device=self.device)
+            inputs = self.collate(batch, device=self.device)
             if hasattr(self, "compiled"):
                 res = self.compiled(inputs)
             else:

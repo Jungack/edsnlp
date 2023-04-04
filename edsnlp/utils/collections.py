@@ -8,63 +8,6 @@ It = TypeVar("It", bound=Iterable)
 T = TypeVar("T")
 
 
-def flatten_dict(root: Dict[str, Any], depth=-1) -> Dict[str, Any]:
-    """
-    Flatten a nested dictionary. Nested keys will be merged
-    into a single string using the "/" character as a separator.
-
-    Parameters
-    ----------
-    root: Dict[str, Any]
-        The dictionary to flatten
-    depth: int
-        The depth to flatten to. -1 means no limit
-
-    Returns
-    -------
-    Dict[str, Any]
-        The flattened dictionary
-    """
-    res = {}
-
-    def rec(d, path, current_depth):
-        for k, v in d.items():
-            if isinstance(v, dict) and current_depth != depth:
-                rec(v, path + "/" + k if path is not None else k, current_depth + 1)
-            else:
-                res[path + "/" + k if path is not None else k] = v
-
-    rec(root, None, 0)
-    return res
-
-
-def nest_dict(flat: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Nest a flattened dictionary, using the "/" character as a separator.
-
-    Parameters
-    ----------
-    flat: Dict[str, Any]
-        The flattened dictionary
-
-    Returns
-    -------
-    Dict[str, Any]
-        The nested dictionary
-    """
-    res = {}
-
-    for key, values in flat.items():
-        for path in key.split("|"):
-            current = res
-            parts = path.split("/")
-            for part in parts[:-1]:
-                current = current.setdefault(part, {})
-            current[parts[-1]] = values
-
-    return res
-
-
 def ld_to_dl(ld: Iterable[Mapping[str, T]]) -> Dict[str, List[T]]:
     """
     Convert a list of dictionaries to a dictionary of lists
@@ -81,40 +24,6 @@ def ld_to_dl(ld: Iterable[Mapping[str, T]]) -> Dict[str, List[T]]:
     """
     ld = list(ld)
     return {k: [dic[k] for dic in ld] for k in ld[0]}
-
-
-def dl_to_ld(dl: Mapping[str, Sequence[T]]) -> List[Dict[str, T]]:
-    """
-    Convert a dictionary of lists to a list of dictionaries
-
-    Parameters
-    ----------
-    dl: Mapping[str, Sequence[T]]
-        The dictionary of lists
-
-    Returns
-    -------
-    List[Dict[str, T]]
-        The list of dictionaries
-    """
-    return [dict(zip(dl, t)) for t in zip(*dl.values())]
-
-
-def flatten(seq: Sequence[Sequence["T"]]) -> List["T"]:
-    """
-    Flatten/chain a sequence of sequences
-
-    Parameters
-    ----------
-    seq: Sequence[Sequence[T]]
-        The sequence of sequences
-
-    Returns
-    -------
-    List[T]
-        The flattened sequence
-    """
-    return list(itertools.chain.from_iterable(seq))
 
 
 FLATTEN_TEMPLATE = """\
