@@ -123,7 +123,7 @@ where = ["."]
 "eds.sections"           = "edsnlp.pipelines.misc.sections.factory:create_component"
 
 "eds.transformer"        = "edsnlp.pipelines.trainable.embeddings.transformer:create_component"
-"eds.nested_ner"         = "edsnlp.pipelines.trainable.nested_ner:create_component"
+"eds.ner"                = "edsnlp.pipelines.trainable.ner.ner:create_component"
 
 [project.entry-points."spacy_architectures"]
 "eds.stack_crf_ner_model.v1" = "edsnlp.models.stack_crf_ner:create_model"
