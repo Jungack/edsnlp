@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -144,6 +145,7 @@ def brat_dataset(path, limit: Optional[int] = None, span_getter=make_span_getter
 
 @validate_arguments
 def train(
+    output_path: Path,
     nlp: Pipeline,
     train_data: Callable[[Pipeline], Iterable[Doc]],
     val_data: Callable[[Pipeline], Iterable[Doc]],
@@ -154,6 +156,7 @@ def train(
     validation_interval: int = 10,
     device: str = "cpu",
 ):
+    os.makedirs(output_path, exist_ok=True)
     device = torch.device(device)
     set_seed(seed)
 
@@ -190,7 +193,8 @@ def train(
                     "schedules": [
                         LinearSchedule(
                             total_steps=max_steps,
-                            warmup_rate=0.1,
+                            warmup_rate=0.5,
+                            start_value=lr,
                             path="lr",
                         )
                     ],
@@ -215,12 +219,12 @@ def train(
     bar = tqdm(range(max_steps + 1), "Training model", leave=True)
     for step in count():
         if (step % validation_interval) == 0 or step == max_steps:
-            nlp.to_disk("last-model")
+            nlp.to_disk(output_path / "last-model")
             print(acc_loss / max(acc_steps, 1))
             acc_loss = 0
             acc_steps = 0
             last_scores = nlp.score(val_docs)
-            print(last_scores)
+            print(last_scores, "lr", optimizer.param_groups[0]["lr"])
         if step == max_steps:
             break
         batch = next(iterator)
@@ -253,16 +257,20 @@ def train(
 
         bar.update()
 
-    nlp.to_disk("last-model")
+    nlp.to_disk(output_path)
 
-    assert Path("last-model").exists()
+    assert Path(output_path).exists()
 
-    nlp.from_disk("last-model")
+    nlp.from_disk(output_path)
 
     assert last_scores["ner"]["ents_f"] == 1.0
 
 
-def test_train(run_in_test_dir):
+def test_train(run_in_test_dir, tmp_path):
+    set_seed(42)
     config = Config.from_disk("config.cfg")
     print(config.to_str())
-    train(**config["train"].resolve(registry=registry, root=config))
+    train(
+        **config["train"].resolve(registry=registry, root=config),
+        output_path=tmp_path,
+    )
