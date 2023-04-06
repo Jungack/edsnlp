@@ -170,6 +170,12 @@ omit-covered-files = false
 # generate-badge = "."
 # badge-format = "svg"
 
+[tool.coverage]
+exclude_lines = [
+  "raise NotImplementedError",
+  "def __repr__",
+]
+
 [tool.ruff]
 exclude = [
     ".git",
