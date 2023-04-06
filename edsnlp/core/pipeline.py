@@ -1,47 +1,48 @@
 # ruff: noqa: E501
-from collections import defaultdict
-
 import copy
 import functools
 import os
 import shutil
-import spacy
-import srsly
 import time
 import warnings
+from collections import defaultdict
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+import spacy
+import srsly
 from spacy.language import BaseDefaults
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.util import get_lang_class
 from spacy.vocab import Vocab, create_vocab
 from tqdm import tqdm
-from typing import (
-    Iterable,
-    Tuple,
-    Union,
-    Optional,
-    Dict,
-    Any,
-    Callable,
-    Sequence,
-    List,
-    Type,
-)
 
 from confit import Config
-from confit.utils.collections import split_path, join_path
+from confit.utils.collections import join_path, split_path
 from confit.utils.xjson import Reference
-from edsnlp.core.registry import CurriedFactory, PIPE_META
+from edsnlp.core.registry import PIPE_META, CurriedFactory, FactoryMeta
 from edsnlp.utils.collections import (
-    batchify,
-    multi_tee,
-    batch_compress_dict,
-    decompress_dict,
-    FrozenList,
     FrozenDict,
+    FrozenList,
+    batch_compress_dict,
+    batchify,
+    decompress_dict,
+    multi_tee,
 )
 
 EMPTY_LIST = FrozenList()
@@ -53,7 +54,7 @@ class CacheEnum(str, Enum):
     forward = "forward"
 
 
-Pipe = Callable[[Doc], Doc]
+Pipe = TypeVar("Pipe", bound=Callable[[Doc], Doc])
 
 
 class Pipeline:
@@ -110,7 +111,7 @@ class Pipeline:
                 ]["tokenizer"]
             )
 
-        self._create_tokenizer = create_tokenizer
+        self._tokenizer_config = Config.serialize(create_tokenizer)
         self.tokenizer = create_tokenizer(self)
         self._components: List[Tuple[str, Pipe]] = []
         self._disabled: List[str] = []
@@ -143,7 +144,7 @@ class Pipeline:
         for n, pipe in self.pipeline:
             if n == name:
                 return pipe
-        raise ValueError(f"Pipe {name} not found in pipeline.")
+        raise ValueError(f"Pipe {repr(name)} not found in pipeline.")
 
     def has_pipe(self, name: str) -> bool:
         """
@@ -247,7 +248,7 @@ class Pipeline:
         self._components.append((name, pipe))
         return pipe
 
-    def get_pipe_meta(self, name: str) -> Dict[str, Any]:
+    def get_pipe_meta(self, name: str) -> FactoryMeta:
         """
         Get the meta information for a component.
 
@@ -399,9 +400,7 @@ class Pipeline:
         Iterable[Tuple[str, 'edsnlp.core.components.TorchComponent']]
         """
         for name, pipe in self.pipeline:
-            if name in disable:
-                continue
-            if hasattr(pipe, "batch_process"):
+            if name not in disable and hasattr(pipe, "batch_process"):
                 yield name, pipe
 
     def post_init(self, data: Iterable[Doc]):
@@ -476,6 +475,14 @@ class Pipeline:
 
         # Since components are actually resolved as curried factories,
         # we need to instantiate them here
+        for name, component in components.items():
+            if not isinstance(component, CurriedFactory):
+                raise ValueError(
+                    f"Component {repr(name)} is not instantiable. Please make sure "
+                    "that you didn't forget to add a '@factory' key to the component "
+                    "config."
+                )
+
         components = CurriedFactory.instantiate(components, nlp=nlp)
 
         for name in pipeline:
@@ -886,7 +893,7 @@ class Pipeline:
                 "pipeline": list(self.pipe_names),
                 "components": {key: component for key, component in self._components},
                 "disabled": list(self.disabled),
-                "tokenizer": self._create_tokenizer,
+                "tokenizer": self._tokenizer_config,
             }
         )
 
@@ -959,7 +966,12 @@ def blank(
         The new empty pipeline instance.
     """
     # Check if language is registered / entry point is available
-    if "lang" in config and config["lang"] != lang:
+    config_lang = (
+        config["nlp"].get("lang")
+        if isinstance(config.get("nlp"), dict)
+        else config.get("lang")
+    )
+    if config_lang is not None and config_lang != lang:
         raise ValueError(
             "The language specified in the config does not match the lang argument."
         )

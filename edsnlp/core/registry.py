@@ -1,3 +1,5 @@
+from functools import partial
+
 import catalogue
 import inspect
 import spacy
@@ -128,15 +130,7 @@ class FactoryRegistry(Registry):
         """
 
         def curried(**kwargs):
-            defaults = Config(
-                {
-                    key: value.default
-                    for key, value in inspect.signature(func).parameters.items()
-                    if value.default is not inspect.Parameter.empty
-                    and key not in kwargs
-                }
-            ).resolve(registry=getattr(self, "registry", None))
-            return CurriedFactory(func, kwargs={**defaults, **kwargs})
+            return CurriedFactory(func, kwargs=kwargs)
 
         namespace = list(self.namespace) + [name]
         spacy_namespace = ["spacy", "internal_factories", name]
@@ -247,10 +241,40 @@ class FactoryRegistry(Registry):
 
             return registered_fn
 
-        if func is not None:
-            return register(func)
-        else:
-            return register
+        return register(func) if func is not None else register
+
+
+class TokenizerRegistry(Registry):
+    def get(self, name: str) -> Any:
+        """
+        Get a tokenizer
+        """
+
+        def curried(**kwargs):
+            return partial(func, **kwargs)
+
+        namespace = list(self.namespace) + [name]
+        spacy_namespace = ["spacy", "tokenizers", name]
+        if catalogue.check_exists(*namespace):
+            func = catalogue._get(namespace)
+            return curried
+        elif catalogue.check_exists(*spacy_namespace):
+            func = catalogue._get(spacy_namespace)
+            return curried
+
+        if self.entry_points:
+            self.get_entry_point(name)
+            if catalogue.check_exists(*namespace):
+                func = catalogue._get(namespace)
+                return curried
+
+        available = self.get_available()
+        current_namespace = " -> ".join(self.namespace)
+        available_str = ", ".join(available) or "none"
+        raise catalogue.RegistryError(
+            f"Can't find '{name}' in registry {current_namespace}. "
+            f"Available names: {available_str}"
+        )
 
 
 class registry(RegistryCollection):
