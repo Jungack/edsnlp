@@ -37,10 +37,13 @@ class CRFMode(str, Enum):
     marginal = "marginal"
 
 
+# separate from make_span_getter to be picklable
+def span_getter(doc):
+    return doc.ents
+
+
 @registry.misc.register("span-getter")
 def make_span_getter():
-    def span_getter(doc):
-        return doc.ents
 
     return span_getter
 
