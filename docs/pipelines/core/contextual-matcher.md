@@ -150,7 +150,7 @@ import spacy
 
 nlp = spacy.blank("fr")
 
-nlp.add_pipe("sentences")
+nlp.add_pipe("eds.sentences")
 nlp.add_pipe("normalizer")
 
 nlp.add_pipe(
